@@ -9,10 +9,12 @@ import vizinfo
 
 class BoulderScene:
 	def __init__(self):
+		'''initialize. note that TAKEDATA is the option to take orientation, position data'''
 		viz.go(viz.PROMPT)
 		#options
 		self.TAKEDATA = False
 		#init objects
+		self.sky = viz.add("sky_night.osgb")
 		self.ground = viz.add("ground_stone.osgb")
 		self.ground.setScale(5, 5, 5)
 		self.ground.addAction(vizact.moveTo([0, 0, -100], time=20))
