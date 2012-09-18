@@ -4,8 +4,8 @@ import vizproximity
 import viztask
 import vizinput
 import vizinfo
-#import vizsonic
-#from labtracker import *
+#import vizsonic #enable for proper ambisonic sound
+#from labtracker import * #enable for lab tracker
 
 class BoulderScene:
 	def __init__(self):
@@ -13,18 +13,23 @@ class BoulderScene:
 		viz.go(viz.PROMPT)
 		#options
 		self.TAKEDATA = False
-		#init objects
+		#init constant things
 		self.sky = viz.add("sky_night.osgb")
 		self.start_time = viz.tick()
-		self.count = 0
+		#init for data
+		self.count = 0 #used for taking data
 		self.data = ""
 		self.boulder_data = open('boulder_data.txt', 'a')
+		#setup objects
 		self.groundSetup()
 		self.boulderSetup()
+		self.instructionSetup()
+		self.avatarSetup()
+		#self.screenText = viz.addText('blah', viz.SCREEN) #debug screentext
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		#init timers
-		vizact.ontimer(0, self.draw)
+		vizact.onupdate(0, self.draw)
 		if (self.tracking):
 			self.Tracking = labTracker()
 			self.Tracking.setPosition(1,1,1)
@@ -40,7 +45,7 @@ class BoulderScene:
 	def groundSetup(self):
 		'''sets up a ground beneath main view and sets it to scroll'''
 		self.ground = viz.add("ground_gray.osgb")
-		self.ground.setScale(5, 5, 5)
+		self.ground.setScale(10, 10, 10)
 		scroll = vizact.call(self.scrollGround)
 		self.ground.addAction(scroll)
 
@@ -55,6 +60,14 @@ class BoulderScene:
 		#spinmove = vizact.parallel(spin, move)
 		self.boulder.addAction(spin)
 
+	def instructionSetup(self):
+		self.info = vizinfo.add("Run from the boulder!\nBut not literally!")
+		vizact.ontimer2(10, 0, self.info.shrink)
+		
+	def avatarSetup(self):
+		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
+		self.avatar1.state(11)
+		
 	def draw(self):
 		self.count += 1
 		if (self.count == 6 and self.TAKEDATA):
