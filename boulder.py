@@ -9,10 +9,10 @@ import vizinfo
 
 class BoulderScene:
 	def __init__(self):
-		'''initialize. note that TAKEDATA is the option to take orientation, position data'''
+		'''initialize. note that TAKEDATA is the option to take orientation, position data. Data file gets really big, really quickly.'''
 		viz.go(viz.PROMPT)
 		#options
-		self.TAKEDATA = True
+		self.TAKEDATA = False
 		#init objects
 		self.sky = viz.add("sky_night.osgb")
 		self.start_time = viz.tick()
@@ -29,13 +29,23 @@ class BoulderScene:
 			self.Tracking = labTracker()
 			self.Tracking.setPosition(1,1,1)
 
-	def groundSetup(self):
-		self.ground = viz.add("ground_stone.osgb")
-		self.ground.setScale(5, 5, 5)
+	def scrollGround(self):
+		'''this starts the infinite loop of ground scrolling'''
 		move = vizact.moveTo([0, 0, -100], time=20)
+		self.ground.setPosition(0,0,0)
+		scroll = vizact.call(self.scrollGround)
 		self.ground.addAction(move)
+		self.ground.addAction(scroll)
+
+	def groundSetup(self):
+		'''sets up a ground beneath main view and sets it to scroll'''
+		self.ground = viz.add("ground_gray.osgb")
+		self.ground.setScale(5, 5, 5)
+		scroll = vizact.call(self.scrollGround)
+		self.ground.addAction(scroll)
 
 	def boulderSetup(self):
+		'''sets up a boulder to roll eternally'''
 		self.boulder = viz.add("boulder.dae")
 		self.boulder.specular(0,0,0)
 		self.boulder.color(0.3, 0.3, 0.3)
@@ -52,6 +62,7 @@ class BoulderScene:
 			self.count = 0
 
 	def getdata(self):
+		'''formats data and writes it in the file'''
 		orientation = viz.MainView.getEuler()
 		position = viz.MainView.getPosition()
 		self.data = self.data + "euler: " + str(orientation) + '\tposition: ' + str(position) + "\ttime: " + str(viz.tick() - self.start_time) + '\n'
