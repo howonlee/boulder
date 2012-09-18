@@ -1,1 +1,1 @@
-the readmes annoy me
+Use the .dae (COLLADA) format for the boulder, which works awesomely
