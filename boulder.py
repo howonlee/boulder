@@ -25,20 +25,31 @@ class BoulderScene:
 		self.target = vizproximity.Target(viz.MainView)
 		self.manager.addTarget(self.target)
 		#setup objects
+		self.preLoad()
 		self.groundSetup()
 		self.treasureSetup()
 		self.instruction1Setup()
-		#setup behavior
 		#self.screenText = viz.addText('blah', viz.SCREEN) #debug screentext
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		#init timers, callbacks
 		vizact.onkeydown('d', self.manager.setDebug, viz.TOGGLE)
+		vizact.onkeydown('e', self.moveBoulder)
 		vizact.onupdate(0, self.draw)
 		if (self.tracking):
 			self.Tracking = labTracker()
 			self.Tracking.setPosition(0,0,0)
-			
+		
+	def preLoad(self):
+		'''preloads everything so we don't get little bit of lag'''
+		self.ground = viz.add("ground_gray.osgb")
+		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
+		self.boulder = viz.add("boulder.dae")
+		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
+		#no need to hide ground or treasure
+		self.boulder.visible(show = viz.OFF)
+		self.avatar1.visible(show = viz.OFF)
+		
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
 		self.boulderSetup()
@@ -57,7 +68,6 @@ class BoulderScene:
 
 	def groundSetup(self):
 		'''sets up a ground beneath main view'''
-		self.ground = viz.add("ground_gray.osgb")
 		self.ground.setScale(10, 10, 10)
 		
 	def groundRoll(self):
@@ -67,9 +77,17 @@ class BoulderScene:
 
 	def treasureSetup(self):
 		'''make the treasure appear and setup the proximity stuff'''
-		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
 		self.treasure.setPosition([0, 0, -15])
+		#these are for anims
+		x, y, z = (0, 0, -15)
 		self.treasure.setScale(10, 10, 10)
+		#setup anim
+		treasureUpDown = vizact.sequence([vizact.moveTo(pos=[x, y+1, z], time=2), vizact.moveTo(pos=[x, y+0.5, z], time=2)], viz.FOREVER)
+		treasureSpin = vizact.spin(0, 1, 0, 45)
+		treasureAnim = vizact.parallel(treasureUpDown, treasureSpin)
+		self.treasure.addAction(treasureAnim)
+		self.treasure.emissive(1,1,1)
+		#setup sensor
 		self.treasuresensor = vizproximity.Sensor(vizproximity.Box([1, 5, 1], center=[0, 0, 0]), source=self.treasure)
 		self.manager.addSensor(self.treasuresensor)
 		self.manager.onEnter(self.treasuresensor, self.treasureTrigger)
@@ -79,7 +97,7 @@ class BoulderScene:
 
 	def boulderSetup(self):
 		'''sets up a boulder to roll eternally'''
-		self.boulder = viz.add("boulder.dae")
+		self.boulder.visible(show = viz.ON)
 		self.boulder.specular(0,0,0)
 		self.boulder.color(0.3, 0.3, 0.3)
 		self.boulder.setPosition(0, 4, 5)
@@ -87,6 +105,29 @@ class BoulderScene:
 		#move = vizact.moveTo([0, 0, 100], time=20)
 		#spinmove = vizact.parallel(spin, move)
 		self.boulder.addAction(spin)
+		
+	def avatarDeath(self):
+		'''custom blended avatar animations'''
+		self.avatar1.blend(8, .9)
+		self.avatar1.blend(11, .1)
+		neck = self.avatar1.getBone("Bip01 Neck")
+		head = self.avatar1.getBone("Bip01 Head")
+		torso = self.avatar1.getBone("Bip01 Spine1")
+		neck.lock()
+		head.lock()
+		torso.lock()
+		neck.lookAt([3, 3, 3], mode=viz.AVATAR_WORLD)
+		head.lookAt([-30, 30, -30], mode=viz.AVATAR_WORLD)
+		torso.lookAt([-100, 0, 20], mode=viz.AVATAR_WORLD)
+		
+	def moveBoulder(self):
+		'''sets up boulder to run over avatar'''
+		spin = vizact.spin(1, 0, 0, 300)
+		move = vizact.moveTo([0, 0, -100], time=5)
+		spinmove = vizact.parallel(spin, move)
+		self.boulder.clearActions()
+		self.boulder.addAction(spinmove)
+		vizact.ontimer2(0.5, 0, self.avatarDeath)#the 0.5 secs is a guesstimate
 
 	def instruction1Setup(self):
 		'''instructions for the first part of the game, taking the treasure'''
@@ -102,7 +143,7 @@ class BoulderScene:
 		
 	def avatarSetup(self):
 		'''sets up the avatar to be running eternally'''
-		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
+		self.avatar1.visible(show=viz.ON)
 		self.avatar1.state(11)
 		
 	def draw(self):
