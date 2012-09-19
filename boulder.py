@@ -13,12 +13,10 @@ class BoulderScene:
 		viz.go(viz.PROMPT)
 		#options
 		self.TAKEDATA = False
-		#init constant things
-		self.sky = viz.add("sky_night.osgb")
-		self.start_time = viz.tick()
 		#init for data
 		self.count = 0 #used for taking data
 		self.data = ""
+		self.start_time = viz.tick()
 		self.boulder_data = open('boulder_data.txt', 'a')
 		#manager init
 		self.manager = vizproximity.Manager()
@@ -29,18 +27,19 @@ class BoulderScene:
 		self.groundSetup()
 		self.treasureSetup()
 		self.instruction1Setup()
-		#hmd init
-		self.tracking = viz.get(viz.TRACKER)
 		#init timers, callbacks
 		vizact.onkeydown('d', self.manager.setDebug, viz.TOGGLE)
 		vizact.onkeydown('e', self.moveBoulder)
 		vizact.onupdate(0, self.draw)
+		#hmd init
+		self.tracking = viz.get(viz.TRACKER)
 		if (self.tracking):
 			self.Tracking = labTracker()
 			self.Tracking.setPosition(0,0,0)
 		
 	def preLoad(self):
-		'''preloads everything so we don't get little bit of lag'''
+		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
+		self.sky = viz.add("sky_night.osgb")
 		self.ground = viz.add("ground_gray.osgb")
 		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
 		self.boulder = viz.add("boulder.dae")
@@ -54,14 +53,6 @@ class BoulderScene:
 		self.avatar1.visible(show = viz.OFF)
 		self.screenText.visible(show = viz.OFF)
 		self.bloodquad.visible(show = viz.OFF)
-		
-	def bloodSetup(self):
-		self.bloodquad.visible(show = viz.ON)
-		self.bloodquad.setScale(10,10,10)
-		self.bloodquad.setPosition([0.5,0.5, 0])
-		#start fading immediately
-		fade = vizact.fadeTo(0, time=1.5)
-		self.bloodquad.addAction(fade)
 	
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
@@ -75,17 +66,17 @@ class BoulderScene:
 		self.bloodSetup()
 		vizact.ontimer2(3, 0, self.gameOver)
 
+	def groundSetup(self):
+		'''sets up a ground beneath main view'''
+		self.ground.setScale(10, 10, 10)
+		
 	def scrollGround(self):
 		'''this starts the infinite loop of ground scrolling. don't call this, call'''
-		move = vizact.moveTo([0, 0, -100], time=20)
+		move = vizact.moveTo([0, 0, 100], time=20)
 		self.ground.setPosition(0,0,0)
 		scroll = vizact.call(self.scrollGround)
 		self.ground.addAction(move)
 		self.ground.addAction(scroll)
-
-	def groundSetup(self):
-		'''sets up a ground beneath main view'''
-		self.ground.setScale(10, 10, 10)
 
 	def treasureSetup(self):
 		'''make the treasure appear and setup the proximity stuff'''
@@ -106,6 +97,7 @@ class BoulderScene:
 		
 	def treasureCleanup(self):
 		self.treasure.visible(show = viz.OFF)
+		self.manager.removeSensor(self.treasuresensor) #this to prevent re-bouldering, which is a tragedy
 
 	def boulderSetup(self):
 		'''sets up a boulder to roll eternally'''
@@ -114,27 +106,11 @@ class BoulderScene:
 		self.boulder.color(0.3, 0.3, 0.3)
 		self.boulder.setPosition(0, 4, 5)
 		spin = vizact.spin(1, 0, 0, 300)
-		#move = vizact.moveTo([0, 0, 100], time=20)
-		#spinmove = vizact.parallel(spin, move)
 		self.boulder.addAction(spin)
 		#setup sensor
 		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([6, 6, 6], center=[0, 0, 0]), source=self.boulder)
 		self.manager.addSensor(self.bouldersensor)
 		self.manager.onEnter(self.bouldersensor, self.boulderTrigger)
-		
-	def avatarDeath(self):
-		'''custom blended avatar animations for maximum deathiness'''
-		self.avatar1.blend(8, .9)
-		self.avatar1.blend(11, .1)
-		neck = self.avatar1.getBone("Bip01 Neck")
-		head = self.avatar1.getBone("Bip01 Head")
-		torso = self.avatar1.getBone("Bip01 Spine1")
-		neck.lock()
-		head.lock()
-		torso.lock()
-		neck.lookAt([3, 3, 3], mode=viz.AVATAR_WORLD)
-		head.lookAt([-30, 30, -30], mode=viz.AVATAR_WORLD)
-		torso.lookAt([-100, 0, 20], mode=viz.AVATAR_WORLD)
 		
 	def moveBoulder(self):
 		'''sets up boulder to run over avatar'''
@@ -161,8 +137,31 @@ class BoulderScene:
 		'''sets up the avatar to be running eternally'''
 		self.avatar1.visible(show=viz.ON)
 		self.avatar1.state(11)
+				
+	def avatarDeath(self):
+		'''custom blended avatar animations for maximum deathiness'''
+		self.avatar1.blend(8, .9)
+		self.avatar1.blend(11, .1)
+		neck = self.avatar1.getBone("Bip01 Neck")
+		head = self.avatar1.getBone("Bip01 Head")
+		torso = self.avatar1.getBone("Bip01 Spine1")
+		neck.lock()
+		head.lock()
+		torso.lock()
+		neck.lookAt([3, 3, 3], mode=viz.AVATAR_WORLD)
+		head.lookAt([-30, 30, -30], mode=viz.AVATAR_WORLD)
+		torso.lookAt([-100, 0, 20], mode=viz.AVATAR_WORLD)
+				
+	def bloodSetup(self):
+		self.bloodquad.visible(show = viz.ON)
+		self.bloodquad.setScale(10,10,10)
+		self.bloodquad.setPosition([0.5,0.5, 0])
+		#start fading immediately
+		fade = vizact.fadeTo(0, time=1.5)
+		self.bloodquad.addAction(fade)
 		
 	def gameOver(self):
+		'''shows game over message. other parts are done in other functions.'''
 		self.screenText.alignment(viz.ALIGN_CENTER)
 		self.screenText.setPosition(0.5, 0.5, 0)
 		self.screenText.visible(show=viz.ON)
@@ -172,13 +171,14 @@ class BoulderScene:
 		self.screenText.addAction(fadeIn)
 		
 	def draw(self):
+		'''called every frame'''
 		self.count += 1
 		if (self.count == 6 and self.TAKEDATA):
 			self.getdata()
 			self.count = 0
 
 	def getdata(self):
-		'''formats data and writes it in the file. we must offload to another thread eventually.'''
+		'''formats data and writes it in the file. we must offload to another thread eventually. Data file gets big really quickly.'''
 		orientation = viz.MainView.getEuler()
 		position = viz.MainView.getPosition()
 		self.data = self.data + "euler: " + str(orientation) + '\tposition: ' + str(position) + "\ttime: " + str(viz.tick() - self.start_time) + '\n'
