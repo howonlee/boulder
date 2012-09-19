@@ -13,6 +13,13 @@ class BoulderScene:
 		viz.go(viz.PROMPT)
 		#options
 		self.TAKEDATA = False
+		self.MULTIKINECT = False
+		if self.MULTIKINECT:
+			import MultiKinectInterface
+		#constants
+		self.HEAD_INDEX = 3
+		self.RIGHT_HAND_INDEX = 11
+		self.NUMPOINTS = 20
 		#init for data
 		self.count = 0 #used for taking data
 		self.data = ""
@@ -31,18 +38,31 @@ class BoulderScene:
 		vizact.onkeydown('d', self.manager.setDebug, viz.TOGGLE)
 		vizact.onkeydown('e', self.moveBoulder)
 		vizact.onupdate(0, self.draw)
+		#kinect init
+		if self.MULTIKINECT:
+			self.sensor = MultiKinectInterface.MultiKinectSensor()
+			self.skeleton = []
+			vizact.onkeydown(viz.KEY_ESCAPE, sensor.shutdownKinect)
+			for i in range(self.NUMPOINTS):
+				sphere = vizshape.addSphere(radius = 0.1, color = col)
+				self.skeleton.append(sphere)
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		if (self.tracking):
 			self.Tracking = labTracker()
 			self.Tracking.setPosition(0,0,0)
-		
+
 	def preLoad(self):
 		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
+		#sounds
+		self.footstep = viz.addAudio("footsteps.wav")
+		self.crash = viz.addAudio("crash.wav")
+		#objects
 		self.sky = viz.add("sky_night.osgb")
 		self.ground = viz.add("ground_gray.osgb")
 		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
 		self.boulder = viz.add("boulder.dae")
+		#misc
 		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
 		self.screenText = viz.addText('0', viz.SCREEN) #debug screentext
 		self.blood = viz.addTexture("blood.png")
@@ -53,7 +73,7 @@ class BoulderScene:
 		self.avatar1.visible(show = viz.OFF)
 		self.screenText.visible(show = viz.OFF)
 		self.bloodquad.visible(show = viz.OFF)
-	
+
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
 		self.boulderSetup()
@@ -61,7 +81,7 @@ class BoulderScene:
 		self.treasureCleanup()
 		self.scrollGround()
 		self.instruction2Setup()
-		
+
 	def boulderTrigger(self, e):
 		self.bloodSetup()
 		vizact.ontimer2(3, 0, self.gameOver)
@@ -69,7 +89,7 @@ class BoulderScene:
 	def groundSetup(self):
 		'''sets up a ground beneath main view'''
 		self.ground.setScale(10, 10, 10)
-		
+
 	def scrollGround(self):
 		'''this starts the infinite loop of ground scrolling. don't call this, call'''
 		move = vizact.moveTo([0, 0, 100], time=20)
@@ -94,7 +114,7 @@ class BoulderScene:
 		self.treasuresensor = vizproximity.Sensor(vizproximity.Box([1, 5, 1], center=[0, 0, 0]), source=self.treasure)
 		self.manager.addSensor(self.treasuresensor)
 		self.manager.onEnter(self.treasuresensor, self.treasureTrigger)
-		
+
 	def treasureCleanup(self):
 		self.treasure.visible(show = viz.OFF)
 		self.manager.removeSensor(self.treasuresensor) #this to prevent re-bouldering, which is a tragedy
@@ -111,7 +131,7 @@ class BoulderScene:
 		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([6, 6, 6], center=[0, 0, 0]), source=self.boulder)
 		self.manager.addSensor(self.bouldersensor)
 		self.manager.onEnter(self.bouldersensor, self.boulderTrigger)
-		
+
 	def moveBoulder(self):
 		'''sets up boulder to run over avatar'''
 		spin = vizact.spin(1, 0, 0, 300)
@@ -132,12 +152,12 @@ class BoulderScene:
 		self.info1.shrink()
 		self.info2 = vizinfo.add("Run from the boulder!\nBut not literally!")
 		vizact.ontimer2(10, 0, self.info2.shrink)
-		
+
 	def avatarSetup(self):
 		'''sets up the avatar to be running eternally'''
 		self.avatar1.visible(show=viz.ON)
 		self.avatar1.state(11)
-				
+
 	def avatarDeath(self):
 		'''custom blended avatar animations for maximum deathiness'''
 		self.avatar1.blend(8, .9)
@@ -151,7 +171,7 @@ class BoulderScene:
 		neck.lookAt([3, 3, 3], mode=viz.AVATAR_WORLD)
 		head.lookAt([-30, 30, -30], mode=viz.AVATAR_WORLD)
 		torso.lookAt([-100, 0, 20], mode=viz.AVATAR_WORLD)
-				
+
 	def bloodSetup(self):
 		self.bloodquad.visible(show = viz.ON)
 		self.bloodquad.setScale(10,10,10)
@@ -159,19 +179,35 @@ class BoulderScene:
 		#start fading immediately
 		fade = vizact.fadeTo(0, time=1.5)
 		self.bloodquad.addAction(fade)
-		
+
 	def gameOver(self):
 		'''shows game over message. other parts are done in other functions.'''
 		self.screenText.alignment(viz.ALIGN_CENTER)
 		self.screenText.setPosition(0.5, 0.5, 0)
 		self.screenText.visible(show=viz.ON)
 		self.screenText.alpha(0)
-		self.screenText.message("Game Over! Squishy Squish!")		
+		self.screenText.message("Game Over! Squishy Squish!")
 		fadeIn = vizact.fadeTo(1, time=5)
 		self.screenText.addAction(fadeIn)
-		
+
+	def checkGesture():
+		self.sensor.refreshData()
+		skeletonData = self.sensor.getTrackedSkeleton(0,0)
+		if skeletonData != None:
+			for i in range(self.NUMPOINTS):
+				self.skeleton[i].visible(viz.ON)
+				point = skeletonData[i]
+				skeleton[i].setPosition(self.NUMPOINTS)
+			if skeletonData[RIGHT_HAND_INDEX][1] > skeletonData[HEAD_INDEX][1]:
+				world.playsound("kick5.wav")
+		else:
+			for i in range(numPoints):
+				self.skeleton[i].visible(viz.OFF)
+
 	def draw(self):
 		'''called every frame'''
+		if self.MULTIKINECT:
+			self.checkGesture()
 		self.count += 1
 		if (self.count == 6 and self.TAKEDATA):
 			self.getdata()
