@@ -20,7 +20,9 @@ class BoulderScene:
 		self.HEAD_INDEX = 3
 		self.RIGHT_HAND_INDEX = 11
 		self.NUMPOINTS = 20
+		self.WIN_SCORE = 5000
 		#init for data
+		self.score = 0
 		self.count = 0 #used for taking data
 		self.data = ""
 		self.start_time = viz.tick()
@@ -37,6 +39,7 @@ class BoulderScene:
 		#init timers, callbacks
 		vizact.onkeydown('d', self.manager.setDebug, viz.TOGGLE)
 		vizact.onkeydown('e', self.moveBoulder)
+		vizact.onkeydown('f', self.runAway)
 		vizact.onupdate(0, self.draw)
 		#kinect init
 		if self.MULTIKINECT:
@@ -74,6 +77,12 @@ class BoulderScene:
 		self.avatar1.visible(show = viz.OFF)
 		self.screenText.visible(show = viz.OFF)
 		self.bloodquad.visible(show = viz.OFF)
+		
+	def checkWin(self):
+		if (self.score > self.WIN_SCORE):
+			self.runAway()
+		else:
+			self.moveBoulder() #and then squish
 
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
@@ -85,7 +94,7 @@ class BoulderScene:
 
 	def boulderTrigger(self, e):
 		self.bloodSetup()
-		vizact.ontimer2(3, 0, self.gameOver)
+		vizact.ontimer2(3, 0, self.gameOver, msg="Squishy Squish!")
 
 	def groundSetup(self):
 		'''sets up a ground beneath main view'''
@@ -141,6 +150,12 @@ class BoulderScene:
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
 		vizact.ontimer2(0.5, 0, self.avatarDeath)#the 0.5 secs is a guesstimate
+		
+	def runAway(self):
+		'''sets up avatar to run away successfully'''
+		move = vizact.moveTo([0, 1.7, -100], time=2)
+		viz.MainView.addAction(move)
+		vizact.ontimer2(2.2, 0, self.gameOver, msg="You won!")
 
 	def instruction1Setup(self):
 		'''instructions for the first part of the game, taking the treasure'''
@@ -182,13 +197,13 @@ class BoulderScene:
 		fade = vizact.fadeTo(0, time=1.5)
 		self.bloodquad.addAction(fade)
 
-	def gameOver(self):
+	def gameOver(self, msg):
 		'''shows game over message. other parts are done in other functions.'''
 		self.screenText.alignment(viz.ALIGN_CENTER)
 		self.screenText.setPosition(0.5, 0.5, 0)
 		self.screenText.visible(show=viz.ON)
 		self.screenText.alpha(0)
-		self.screenText.message("Game Over! Squishy Squish!")
+		self.screenText.message("Game Over! " + msg)
 		fadeIn = vizact.fadeTo(1, time=5)
 		self.screenText.addAction(fadeIn)
 
