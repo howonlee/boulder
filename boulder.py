@@ -7,6 +7,10 @@ import vizinfo
 #import vizsonic #enable for proper ambisonic sound
 #from labtracker import * #enable for lab tracker
 
+'''current todos:
+insert sfx to all the sfx places
+insert music somewhere
+see how the new gesture works'''
 class BoulderScene:
 	def __init__(self):
 		'''initialize. note that takeData is the option to take orientation, position data. Data file gets really big, really quickly.'''
@@ -88,6 +92,7 @@ class BoulderScene:
 
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
+		#sfx here: blingy thing
 		self.boulderSetup()
 		self.avatarSetup()
 		self.treasureCleanup()
@@ -95,6 +100,8 @@ class BoulderScene:
 		self.instruction2Setup()
 
 	def boulderTrigger(self, e):
+		'''called when we hit the boulder, to indicate that we have been squished'''
+		#sfx here: squish
 		self.bloodSetup()
 		vizact.ontimer2(3, 0, self.gameOver, msg="Squishy Squish!")
 
@@ -104,6 +111,7 @@ class BoulderScene:
 
 	def scrollGround(self):
 		'''this starts the infinite loop of ground scrolling. don't call this, call'''
+		#sfx here: low --mechanical-- rumbling, different from boulder's rumbling
 		move = vizact.moveTo([0, 0, 100], time=20)
 		self.ground.setPosition(0,0,0)
 		scroll = vizact.call(self.scrollGround)
@@ -133,6 +141,7 @@ class BoulderScene:
 
 	def boulderSetup(self):
 		'''sets up a boulder to roll eternally'''
+		#sfx here: rolling boulder
 		self.boulder.visible(show = viz.ON)
 		self.boulder.specular(0,0,0)
 		self.boulder.color(0.3, 0.3, 0.3)
@@ -155,6 +164,7 @@ class BoulderScene:
 		
 	def runAway(self):
 		'''sets up player to run away successfully. avatar still gets squished.'''
+		#sfx here: speedy footsteps
 		move1 = vizact.moveTo([0, 1.7, -15], time=2)
 		move2 = vizact.moveTo([0, 1.7, -100], time=15)
 		spin = vizact.spin(1, 0, 0, 300)
@@ -169,12 +179,14 @@ class BoulderScene:
 
 	def instruction1Setup(self):
 		'''instructions for the first part of the game, taking the treasure'''
+		#sfx here: blingy notification sfx
 		self.info1 = vizinfo.add("There's probably treasure...\nBut you have limited time.")
 		vizact.ontimer2(6, 0, self.info1.shrink)
 
 	def instruction2Setup(self):
 		'''instructions for the second part of the game, the running'''
-		#just in case it takes less than 6 seconds
+		#sfx here: blingy notification sfx
+		#just in case the previous notification takes less than 6 seconds
 		self.info1.shrink()
 		self.info2 = vizinfo.add("Run from the boulder!\nBut not literally!")
 		vizact.ontimer2(10, 0, self.info2.shrink)
@@ -187,6 +199,7 @@ class BoulderScene:
 
 	def avatarDeath(self):
 		'''custom blended avatar animations for maximum deathiness'''
+		#sfx here: scream
 		self.avatar1.blend(8, .9)
 		self.avatar1.blend(11, .1)
 		neck = self.avatar1.getBone("Bip01 Neck")
@@ -231,7 +244,7 @@ class BoulderScene:
 			if ((skeletonData[RIGHT_FOOT_INDEX][1] > 0.2) or (skeletonData[LEFT_FOOT_INDEX][1] > 0.2)):
 				ground.playsound("kick5.wav")
 				self.score += 1
-				print self.score #debugging
+				print self.score #debugging; I need to know how this stepping works
 		else:
 			for i in range(numPoints):
 				self.skeleton[i].visible(viz.OFF)
