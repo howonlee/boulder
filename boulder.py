@@ -29,7 +29,6 @@ class BoulderScene:
 		self.groundSetup()
 		self.treasureSetup()
 		self.instruction1Setup()
-		#self.screenText = viz.addText('blah', viz.SCREEN) #debug screentext
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		#init timers, callbacks
@@ -46,10 +45,24 @@ class BoulderScene:
 		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
 		self.boulder = viz.add("boulder.dae")
 		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
+		self.screenText = viz.addText('0', viz.SCREEN) #debug screentext
+		self.blood = viz.addTexture("blood.png")
+		self.bloodquad = viz.addTexQuad(viz.SCREEN)
+		self.bloodquad.texture(self.blood)
 		#no need to hide ground or treasure
 		self.boulder.visible(show = viz.OFF)
 		self.avatar1.visible(show = viz.OFF)
+		self.screenText.visible(show = viz.OFF)
+		self.bloodquad.visible(show = viz.OFF)
 		
+	def bloodSetup(self):
+		self.bloodquad.visible(show = viz.ON)
+		self.bloodquad.setScale(10,10,10)
+		self.bloodquad.setPosition([0.5,0.5, 0])
+		#start fading immediately
+		fade = vizact.fadeTo(0, time=1.5)
+		self.bloodquad.addAction(fade)
+	
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
 		self.boulderSetup()
@@ -59,7 +72,8 @@ class BoulderScene:
 		self.instruction2Setup()
 		
 	def boulderTrigger(self, e):
-		print "you got hit"
+		self.bloodSetup()
+		vizact.ontimer2(3, 0, self.gameOver)
 
 	def scrollGround(self):
 		'''this starts the infinite loop of ground scrolling. don't call this, call'''
@@ -147,6 +161,15 @@ class BoulderScene:
 		'''sets up the avatar to be running eternally'''
 		self.avatar1.visible(show=viz.ON)
 		self.avatar1.state(11)
+		
+	def gameOver(self):
+		self.screenText.alignment(viz.ALIGN_CENTER)
+		self.screenText.setPosition(0.5, 0.5, 0)
+		self.screenText.visible(show=viz.ON)
+		self.screenText.alpha(0)
+		self.screenText.message("Game Over! Squishy Squish!")		
+		fadeIn = vizact.fadeTo(1, time=5)
+		self.screenText.addAction(fadeIn)
 		
 	def draw(self):
 		self.count += 1
