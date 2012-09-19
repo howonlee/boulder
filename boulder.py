@@ -174,7 +174,7 @@ class BoulderScene:
 		self.boulder.addAction(spinmove)
 		viz.MainView.addAction(move1)
 		viz.MainView.addAction(move2)
-		vizact.ontimer2(1, 0, self.avatarDeath)
+		vizact.ontimer2(1.3, 0, self.avatarDeath)
 		vizact.ontimer2(1.5, 0, self.gameOver, msg="You won!")
 
 	def instruction1Setup(self):
@@ -193,13 +193,14 @@ class BoulderScene:
 
 	def avatarSetup(self):
 		'''sets up the avatar to be running eternally'''
+		#sfx here: footsteps, medium speed
 		self.avatar1.setFace(self.avatarface)
 		self.avatar1.visible(show=viz.ON)
 		self.avatar1.state(11)
 
 	def avatarDeath(self):
 		'''custom blended avatar animations for maximum deathiness'''
-		#sfx here: scream
+		#sfx here: scream AND squish
 		self.avatar1.blend(8, .9)
 		self.avatar1.blend(11, .1)
 		neck = self.avatar1.getBone("Bip01 Neck")
