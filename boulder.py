@@ -10,7 +10,7 @@ import vizinfo
 '''current todos:
 insert sfx to all the sfx places
 insert music somewhere
-see how the new gesture works'''
+see how the new gesture works, eventually replace with a state machine'''
 class BoulderScene:
 	def __init__(self):
 		'''initialize. note that takeData is the option to take orientation, position data. Data file gets really big, really quickly.'''
