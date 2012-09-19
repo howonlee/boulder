@@ -64,6 +64,7 @@ class BoulderScene:
 		self.boulder = viz.add("boulder.dae")
 		#misc
 		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
+		self.avatarface = viz.addFace("rocky.vzf")
 		self.screenText = viz.addText('0', viz.SCREEN) #debug screentext
 		self.blood = viz.addTexture("blood.png")
 		self.bloodquad = viz.addTexQuad(viz.SCREEN)
@@ -155,6 +156,7 @@ class BoulderScene:
 
 	def avatarSetup(self):
 		'''sets up the avatar to be running eternally'''
+		self.avatar1.setFace(self.avatarface)
 		self.avatar1.visible(show=viz.ON)
 		self.avatar1.state(11)
 
