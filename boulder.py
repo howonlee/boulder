@@ -57,9 +57,12 @@ class BoulderScene:
 		self.treasureCleanup()
 		self.scrollGround()
 		self.instruction2Setup()
+		
+	def boulderTrigger(self, e):
+		print "you got hit"
 
 	def scrollGround(self):
-		'''this starts the infinite loop of ground scrolling'''
+		'''this starts the infinite loop of ground scrolling. don't call this, call'''
 		move = vizact.moveTo([0, 0, -100], time=20)
 		self.ground.setPosition(0,0,0)
 		scroll = vizact.call(self.scrollGround)
@@ -69,11 +72,6 @@ class BoulderScene:
 	def groundSetup(self):
 		'''sets up a ground beneath main view'''
 		self.ground.setScale(10, 10, 10)
-		
-	def groundRoll(self):
-		'''tells the ground to scroll like conveyor belt'''
-		scroll = vizact.call(self.scrollGround)
-		self.ground.addAction(scroll)
 
 	def treasureSetup(self):
 		'''make the treasure appear and setup the proximity stuff'''
@@ -105,9 +103,13 @@ class BoulderScene:
 		#move = vizact.moveTo([0, 0, 100], time=20)
 		#spinmove = vizact.parallel(spin, move)
 		self.boulder.addAction(spin)
+		#setup sensor
+		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([6, 6, 6], center=[0, 0, 0]), source=self.boulder)
+		self.manager.addSensor(self.bouldersensor)
+		self.manager.onEnter(self.bouldersensor, self.boulderTrigger)
 		
 	def avatarDeath(self):
-		'''custom blended avatar animations'''
+		'''custom blended avatar animations for maximum deathiness'''
 		self.avatar1.blend(8, .9)
 		self.avatar1.blend(11, .1)
 		neck = self.avatar1.getBone("Bip01 Neck")
