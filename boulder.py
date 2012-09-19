@@ -17,7 +17,7 @@ class BoulderScene:
 		viz.go(viz.PROMPT)
 		#options
 		self.takeData = False
-		self.MULTIKINECT = False
+		self.MULTIKINECT = True
 		self.isGameOver = False
 		if self.MULTIKINECT:
 			import MultiKinectInterface
@@ -52,7 +52,7 @@ class BoulderScene:
 		if self.MULTIKINECT:
 			self.sensor = MultiKinectInterface.MultiKinectSensor()
 			self.skeleton = []
-			vizact.onkeydown(viz.KEY_ESCAPE, sensor.shutdownKinect)
+			vizact.onkeydown(viz.KEY_ESCAPE, self.sensor.shutdownKinect)
 			for i in range(self.NUMPOINTS):
 				sphere = vizshape.addSphere(radius = 0.1, color = col)
 				self.skeleton.append(sphere)
@@ -76,6 +76,8 @@ class BoulderScene:
 		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
 		self.avatarface = viz.addFace("rocky.vzf")
 		self.screenText = viz.addText('0', viz.SCREEN) #debug screentext
+		self.screenText2 = viz.addText('1', viz.SCREEN)
+		self.screenText2.setPosition(0, 0.8, 0)
 		self.blood = viz.addTexture("blood.png")
 		self.bloodquad = viz.addTexQuad(viz.SCREEN)
 		self.bloodquad.texture(self.blood)
@@ -234,20 +236,21 @@ class BoulderScene:
 		fadeIn = vizact.fadeTo(1, time=5)
 		self.screenText.addAction(fadeIn)
 
-	def checkGesture():
+	def checkGesture(self):
 		self.sensor.refreshData()
 		skeletonData = self.sensor.getTrackedSkeleton(0,0)
 		if skeletonData != None:
+			self.screenText2.message(str(skeletonData[self.RIGHT_FOOT_INDEX]))
 			for i in range(self.NUMPOINTS):
 				self.skeleton[i].visible(viz.ON)
 				point = skeletonData[i]
-				skeleton[i].setPosition(self.NUMPOINTS)
-			if ((skeletonData[RIGHT_FOOT_INDEX][1] > 0.2) or (skeletonData[LEFT_FOOT_INDEX][1] > 0.2)):
+				self.skeleton[i].setPosition(point)
+			if ((skeletonData[self.RIGHT_FOOT_INDEX][1] > -0.6) or (skeletonData[self.LEFT_FOOT_INDEX][1] > -0.6)):
 				ground.playsound("kick5.wav")
 				self.score += 1
 				print self.score #debugging; I need to know how this stepping works
 		else:
-			for i in range(numPoints):
+			for i in range(self.NUMPOINTS):
 				self.skeleton[i].visible(viz.OFF)
 
 	def draw(self):
