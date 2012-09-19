@@ -9,18 +9,20 @@ import vizinfo
 
 class BoulderScene:
 	def __init__(self):
-		'''initialize. note that TAKEDATA is the option to take orientation, position data. Data file gets really big, really quickly.'''
+		'''initialize. note that takeData is the option to take orientation, position data. Data file gets really big, really quickly.'''
 		viz.go(viz.PROMPT)
 		#options
-		self.TAKEDATA = False
+		self.takeData = False
 		self.MULTIKINECT = False
+		self.isGameOver = False
 		if self.MULTIKINECT:
 			import MultiKinectInterface
 		#constants
 		self.HEAD_INDEX = 3
 		self.RIGHT_HAND_INDEX = 11
 		self.NUMPOINTS = 20
-		self.WIN_SCORE = 5000
+		self.WIN_SCORE = 50
+		self.GAME_LENGTH = 100
 		#init for data
 		self.score = 0
 		self.count = 0 #used for taking data
@@ -41,6 +43,7 @@ class BoulderScene:
 		vizact.onkeydown('e', self.moveBoulder)
 		vizact.onkeydown('f', self.runAway)
 		vizact.onupdate(0, self.draw)
+		vizact.ontimer2(self.GAME_LENGTH, 0, self.checkWin)
 		#kinect init
 		if self.MULTIKINECT:
 			self.sensor = MultiKinectInterface.MultiKinectSensor()
@@ -75,7 +78,6 @@ class BoulderScene:
 		#no need to hide ground or treasure
 		self.boulder.visible(show = viz.OFF)
 		self.avatar1.visible(show = viz.OFF)
-		self.screenText.visible(show = viz.OFF)
 		self.bloodquad.visible(show = viz.OFF)
 		
 	def checkWin(self):
@@ -110,11 +112,11 @@ class BoulderScene:
 
 	def treasureSetup(self):
 		'''make the treasure appear and setup the proximity stuff'''
+		#setup treasure
 		self.treasure.setPosition([0, 0, -15])
-		#these are for anims
-		x, y, z = (0, 0, -15)
 		self.treasure.setScale(10, 10, 10)
 		#setup anim
+		x, y, z = (0, 0, -15)
 		treasureUpDown = vizact.sequence([vizact.moveTo(pos=[x, y+1, z], time=2), vizact.moveTo(pos=[x, y+0.5, z], time=2)], viz.FOREVER)
 		treasureSpin = vizact.spin(0, 1, 0, 45)
 		treasureAnim = vizact.parallel(treasureUpDown, treasureSpin)
@@ -145,21 +147,29 @@ class BoulderScene:
 	def moveBoulder(self):
 		'''sets up boulder to run over avatar'''
 		spin = vizact.spin(1, 0, 0, 300)
-		move = vizact.moveTo([0, 0, -100], time=5)
+		move = vizact.moveTo([0, 4, -100], time=5)
 		spinmove = vizact.parallel(spin, move)
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
 		vizact.ontimer2(0.5, 0, self.avatarDeath)#the 0.5 secs is a guesstimate
 		
 	def runAway(self):
-		'''sets up avatar to run away successfully'''
-		move = vizact.moveTo([0, 1.7, -100], time=2)
-		viz.MainView.addAction(move)
-		vizact.ontimer2(2.2, 0, self.gameOver, msg="You won!")
+		'''sets up player to run away successfully. avatar still gets squished.'''
+		move1 = vizact.moveTo([0, 1.7, -15], time=2)
+		move2 = vizact.moveTo([0, 1.7, -100], time=15)
+		spin = vizact.spin(1, 0, 0, 300)
+		moveBoulder = vizact.moveTo([0, 4, -10], time = 5)
+		spinmove = vizact.parallel(spin, moveBoulder)
+		self.boulder.clearActions()
+		self.boulder.addAction(spinmove)
+		viz.MainView.addAction(move1)
+		viz.MainView.addAction(move2)
+		vizact.ontimer2(1, 0, self.avatarDeath)
+		vizact.ontimer2(1.5, 0, self.gameOver, msg="You won!")
 
 	def instruction1Setup(self):
 		'''instructions for the first part of the game, taking the treasure'''
-		self.info1 = vizinfo.add("There's probably treasure...")
+		self.info1 = vizinfo.add("There's probably treasure...\nBut you have limited time.")
 		vizact.ontimer2(6, 0, self.info1.shrink)
 
 	def instruction2Setup(self):
@@ -190,6 +200,7 @@ class BoulderScene:
 		torso.lookAt([-100, 0, 20], mode=viz.AVATAR_WORLD)
 
 	def bloodSetup(self):
+		'''sets up the bloody splat to be displayed'''
 		self.bloodquad.visible(show = viz.ON)
 		self.bloodquad.setScale(10,10,10)
 		self.bloodquad.setPosition([0.5,0.5, 0])
@@ -198,7 +209,9 @@ class BoulderScene:
 		self.bloodquad.addAction(fade)
 
 	def gameOver(self, msg):
-		'''shows game over message. other parts are done in other functions.'''
+		'''shows game over message. other parts of game over are done in other functions. also stops the data.'''
+		self.takeData = False
+		self.isGameOver = True
 		self.screenText.alignment(viz.ALIGN_CENTER)
 		self.screenText.setPosition(0.5, 0.5, 0)
 		self.screenText.visible(show=viz.ON)
@@ -223,12 +236,14 @@ class BoulderScene:
 
 	def draw(self):
 		'''called every frame'''
-		if self.MULTIKINECT:
-			self.checkGesture()
-		self.count += 1
-		if (self.count == 6 and self.TAKEDATA):
+		if (self.isGameOver == False):
+			self.screenText.message(str(max(self.GAME_LENGTH - (viz.tick() - self.start_time), 0))) #show current time remaining
+		self.count += 1 #in other words, every 6 frames.
+		if (self.count == 6 and self.takeData):
 			self.getdata()
 			self.count = 0
+		if self.MULTIKINECT:
+			self.checkGesture()
 
 	def getdata(self):
 		'''formats data and writes it in the file. we must offload to another thread eventually. Data file gets big really quickly.'''
