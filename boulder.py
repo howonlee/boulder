@@ -39,10 +39,15 @@ class BoulderScene:
 		
 	def preLoad(self):
 		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
+		#sounds
+		self.footstep = viz.addAudio("footsteps.wav")
+		self.crash = viz.addAudio("crash.wav")
+		#objects
 		self.sky = viz.add("sky_night.osgb")
 		self.ground = viz.add("ground_gray.osgb")
 		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
 		self.boulder = viz.add("boulder.dae")
+		#misc
 		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
 		self.screenText = viz.addText('0', viz.SCREEN) #debug screentext
 		self.blood = viz.addTexture("blood.png")
