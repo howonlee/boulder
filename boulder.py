@@ -18,10 +18,10 @@ class BoulderScene:
 		if self.MULTIKINECT:
 			import MultiKinectInterface
 		#constants
-		self.HEAD_INDEX = 3
-		self.RIGHT_HAND_INDEX = 11
+		self.LEFT_FOOT_INDEX = 14#actually ankle
+		self.RIGHT_FOOT_INDEX = 18#actually ankle
 		self.NUMPOINTS = 20
-		self.WIN_SCORE = 50
+		self.WIN_SCORE = 5000
 		self.GAME_LENGTH = 100
 		#init for data
 		self.score = 0
@@ -43,7 +43,7 @@ class BoulderScene:
 		vizact.onkeydown('e', self.moveBoulder)
 		vizact.onkeydown('f', self.runAway)
 		vizact.onupdate(0, self.draw)
-		vizact.ontimer2(self.GAME_LENGTH, 0, self.checkWin)
+		vizact.ontimer2(self.GAME_LENGTH, 0, self.checkWin) #timing doesn't seem to be that awfully accurate
 		#kinect init
 		if self.MULTIKINECT:
 			self.sensor = MultiKinectInterface.MultiKinectSensor()
@@ -75,7 +75,7 @@ class BoulderScene:
 		self.blood = viz.addTexture("blood.png")
 		self.bloodquad = viz.addTexQuad(viz.SCREEN)
 		self.bloodquad.texture(self.blood)
-		#no need to hide ground or treasure
+		#no need to hide ground or treasure or screen stuff, which appear immediately
 		self.boulder.visible(show = viz.OFF)
 		self.avatar1.visible(show = viz.OFF)
 		self.bloodquad.visible(show = viz.OFF)
@@ -115,13 +115,13 @@ class BoulderScene:
 		#setup treasure
 		self.treasure.setPosition([0, 0, -15])
 		self.treasure.setScale(10, 10, 10)
+		self.treasure.emissive(1,1,1)
 		#setup anim
 		x, y, z = (0, 0, -15)
 		treasureUpDown = vizact.sequence([vizact.moveTo(pos=[x, y+1, z], time=2), vizact.moveTo(pos=[x, y+0.5, z], time=2)], viz.FOREVER)
 		treasureSpin = vizact.spin(0, 1, 0, 45)
 		treasureAnim = vizact.parallel(treasureUpDown, treasureSpin)
 		self.treasure.addAction(treasureAnim)
-		self.treasure.emissive(1,1,1)
 		#setup sensor
 		self.treasuresensor = vizproximity.Sensor(vizproximity.Box([1, 5, 1], center=[0, 0, 0]), source=self.treasure)
 		self.manager.addSensor(self.treasuresensor)
@@ -228,8 +228,10 @@ class BoulderScene:
 				self.skeleton[i].visible(viz.ON)
 				point = skeletonData[i]
 				skeleton[i].setPosition(self.NUMPOINTS)
-			if skeletonData[RIGHT_HAND_INDEX][1] > skeletonData[HEAD_INDEX][1]:
-				world.playsound("kick5.wav")
+			if ((skeletonData[RIGHT_FOOT_INDEX][1] > 0.2) or (skeletonData[LEFT_FOOT_INDEX][1] > 0.2)):
+				ground.playsound("kick5.wav")
+				self.score += 1
+				print self.score #debugging
 		else:
 			for i in range(numPoints):
 				self.skeleton[i].visible(viz.OFF)
