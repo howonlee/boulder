@@ -4,6 +4,7 @@ import vizproximity
 import viztask
 import vizinput
 import vizinfo
+import vizshape
 from labtracker import *
 
 '''boulder.py, by howon and david
@@ -332,7 +333,7 @@ class BoulderScene:
 				point = skeletonData[i] #
 				self.skeleton[i].setPosition(point) #
 			if ((skeletonData[self.RIGHT_FOOT_INDEX][1] > -0.6) or (skeletonData[self.LEFT_FOOT_INDEX][1] > -0.6)):
-				ground.playsound("kick5.wav") # play a footstep instead, so we get feedback
+				self.ground.playsound("kick5.wav") # play a footstep instead, so we get feedback
 				self.score += 1
 				print self.score #debugging; I need to know how this stepping works
 		else: #
