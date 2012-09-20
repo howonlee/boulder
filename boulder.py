@@ -55,6 +55,7 @@ class BoulderScene:
 			self.RearViewWindow = viz.addWindow()
 			self.RearView = viz.addView()
 			self.RearViewWindow.setView(self.RearView)
+			self.RearViewWindow.setPosition([0, 1])
 			self.viewLink = viz.link(viz.MainView, self.RearView)
 			self.viewLink.preEuler([180, 0, 0])
 		#setup objects
@@ -113,7 +114,7 @@ class BoulderScene:
 		self.scream.stop()
 		self.gong = viz.addAudio("gong.wav")
 		self.gong.stop()
-		self.whoosh = viz.addAudio("eyewhoosh.wav")
+		self.whoosh = viz.addAudio("whoosh.wav")
 		self.whoosh.stop()
 		self.groundroll = viz.addAudio("groundroll.wav")
 		self.groundroll.loop()
