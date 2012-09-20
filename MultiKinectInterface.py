@@ -46,7 +46,7 @@ class MultiKinectSensor:
 	def __init__(self):
 		initData = MultiKinect.initKinects()
 		self.availableKinects = initData[0]
-		
+
 		self.skeletonData = []
 		self.skeletonPointData = []
 		self.kinectTimeStamp = []
@@ -54,7 +54,7 @@ class MultiKinectSensor:
 			self.skeletonData.append([])
 			self.skeletonPointData.append([])
 			self.kinectTimeStamp.append([])
-			
+
 		print "Initializing " + str(self.availableKinects) + " Kinects..."
 		if initData[1]:
 			print "UNABLE TO CREATE ALL KINECT INSTANCES."
@@ -72,7 +72,7 @@ class MultiKinectSensor:
 			print "UNABLE TO OPEN DEPTH STREAM."
 		else:
 			print "Depth streams open."
-	
+
 	def refreshData(self):
 		for i in range(self.availableKinects):
 			totalData = MultiKinect.getNextSkeletonFrameFromKinectAtIndex(i)
@@ -80,7 +80,7 @@ class MultiKinectSensor:
 				self.skeletonData[i] = totalData[0]
 				self.skeletonPointData[i] = totalData[1]
 				self.kinectTimeStamp[i] = totalData[2]
-	
+
 	def skeletonIsActive(self, kinectNum, skelNum):
 		if kinectNum >= self.availableKinects:
 			return False
@@ -90,7 +90,7 @@ class MultiKinectSensor:
 			return True
 		else:
 			return False
-	
+
 	def skeletonIsTracked(self, kinectNum, skelNum):
 		if kinectNum >= self.availableKinects:
 			return False
@@ -104,7 +104,7 @@ class MultiKinectSensor:
 				return True
 		else:
 			return False
-	
+
 	def getSkeletonPos(self, kinectNum, skelNum):
 		if kinectNum >= self.availableKinects:
 			return None
@@ -112,7 +112,7 @@ class MultiKinectSensor:
 			return None
 		else:
 			return self.skeletonData[kinectNum][skelNum][KINECT_SKELETON_POSITION]
-			
+
 	def getActiveSkeletonNums(self, kinectNum):
 		if kinectNum >= self.availableKinects:
 			return None
@@ -121,7 +121,7 @@ class MultiKinectSensor:
 			if self.skeletonIsActive(kinectNum, i):
 				activeNums.append(i)
 		return activeNums
-	
+
 	def getTrackedSkeletonNums(self, kinectNum):
 		if kinectNum >= self.availableKinects:
 			return None
@@ -130,32 +130,32 @@ class MultiKinectSensor:
 			if self.skeletonIsTracked(kinectNum, i):
 				trackedNums.append(i)
 		return trackedNums
-	
+
 	def getTrackedSkeleton(self, kinectNum, trackedSkelIndex):
 		validNums = self.getTrackedSkeletonNums(kinectNum)
 		if (validNums == None) or (len(validNums) <= trackedSkelIndex):
 			return None
 		else:
 			return self.skeletonData[kinectNum][validNums[trackedSkelIndex]]
-	
+
 	def shutdownKinect(self):
 		MultiKinect.shutDownKinects()
 		#for testing
 		print "Shuting down Kinects..."
-		
+
 	def setKinectElevation(self, kinectNum, elevation):
 		if kinectNum >= self.availableKinects:
 			return False
 		else:
 			MultiKinect.setKinectElevationAngle(kinectNum, elevation)
 			return True
-	
+
 	def getKinectElevation(self, kinectNum):
 		if kinectNum >= self.availableKinects:
 			return None
 		else:
 			return MultiKinect.getKinectElevationAngle(kinectNum)
-	
+
 	def getPointTrackingValue(self, kinectNum, skeletonIndex, pointIndex):
 		if kinectNum >= self.availableKinects:
 			return None
@@ -165,7 +165,7 @@ class MultiKinectSensor:
 			return None
 		else:
 			return self.skeletonPointData[kinectNum][skeletonIndex][pointIndex]
-	
+
 	def getKinectTimeStamp(self, kinectNum):
 		if kinectNum >= self.availableKinects:
 			return None
