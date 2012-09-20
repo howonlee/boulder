@@ -27,6 +27,7 @@ class BoulderScene:
 		self.takeData = False
 		self.MULTIKINECT = False
 		self.AMBISONIC = False
+		self.REARVIEW = True
 		self.isGameOver = False
 		if self.MULTIKINECT:
 			import MultiKinectInterface
@@ -49,6 +50,13 @@ class BoulderScene:
 		self.manager = vizproximity.Manager()
 		self.target = vizproximity.Target(viz.MainView)
 		self.manager.addTarget(self.target)
+		#experimental rear-view stuff
+		if self.REARVIEW:
+			self.RearViewWindow = viz.addWindow()
+			self.RearView = viz.addView()
+			self.RearViewWindow.setView(self.RearView)
+			self.viewLink = viz.link(viz.MainView, self.RearView)
+			self.viewLink.preEuler([180, 0, 0])
 		#setup objects
 		self.preLoad()
 		self.groundSetup()
