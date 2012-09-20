@@ -4,6 +4,7 @@ import vizproximity
 import viztask
 import vizinput
 import vizinfo
+from labtracker import *
 
 '''boulder.py, by howon and david
 	a game which consists of running from a boulder'''
@@ -36,11 +37,12 @@ class BoulderScene:
 		self.WIN_SCORE = 5000
 		self.GAME_LENGTH = 100
 		#init for data
+		self.start_time = viz.tick()
 		self.score = 0
 		self.count = 0 #used for taking data
-		self.data = ""
-		self.start_time = viz.tick()
-		self.boulder_data = open('boulder_data.txt', 'a')
+		if (self.takeData):
+			self.data = ""
+			self.boulder_data = open('boulder_data.txt', 'a')
 		#manager init
 		self.manager = vizproximity.Manager()
 		self.target = vizproximity.Target(viz.MainView)
@@ -69,10 +71,8 @@ class BoulderScene:
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		if (self.tracking):
-			from labtracker import *
 			self.Tracking = labTracker()
 			self.Tracking.setPosition(0,0,0)
-			self.Tracking.setEuler(180, 0, 0)
 
 	def preLoad(self):
 		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
