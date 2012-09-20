@@ -76,11 +76,7 @@ class BoulderScene:
 		#kinect init
 		if self.MULTIKINECT:
 			self.sensor = MultiKinectInterface.MultiKinectSensor()
-			self.skeleton = []
 			vizact.onkeydown(viz.KEY_ESCAPE, self.sensor.shutdownKinect)
-			for i in range(self.NUMPOINTS):
-				sphere = vizshape.addSphere(radius = 0.1, color = viz.BLUE)
-				self.skeleton.append(sphere)
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		if (self.tracking):
@@ -327,18 +323,10 @@ class BoulderScene:
 		self.sensor.refreshData()
 		skeletonData = self.sensor.getTrackedSkeleton(0,0)
 		if skeletonData != None:
-			#self.screenText2.message(str(skeletonData[self.RIGHT_FOOT_INDEX])) #
-			for i in range(self.NUMPOINTS): #
-				self.skeleton[i].visible(viz.ON) #
-				point = skeletonData[i] #
-				self.skeleton[i].setPosition(point) #
 			if ((skeletonData[self.RIGHT_FOOT_INDEX][1] > -0.6) or (skeletonData[self.LEFT_FOOT_INDEX][1] > -0.6)):
 				self.ground.playsound("kick5.wav") # play a footstep instead, so we get feedback
 				self.score += 1
 				print self.score #debugging; I need to know how this stepping works
-		else: #
-			for i in range(self.NUMPOINTS): #
-				self.skeleton[i].visible(viz.OFF) #
 
 	def draw(self):
 		'''called every frame'''
