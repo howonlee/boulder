@@ -4,13 +4,18 @@ import vizproximity
 import viztask
 import vizinput
 import vizinfo
-#import vizsonic #enable for proper ambisonic sound
-#from labtracker import * #enable for lab tracker
+
+'''boulder.py, by howon and david
+	a game which consists of running from a boulder'''
 
 '''current todos:
 insert sfx to all the sfx places
 insert music somewhere
 see how the new gesture works, eventually replace with a state machine'''
+'''how ambisonic stuff works:
+		-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
+		-volume and directionality are the only settings added by vizsonic
+		-set the ambient sound (music) with vizsonic.setAmbient()'''
 class BoulderScene:
 	def __init__(self):
 		'''initialize. note that takeData is the option to take orientation, position data. Data file gets really big, really quickly.'''
@@ -18,9 +23,12 @@ class BoulderScene:
 		#options
 		self.takeData = False
 		self.MULTIKINECT = False
+		self.AMBISONIC = False
 		self.isGameOver = False
 		if self.MULTIKINECT:
 			import MultiKinectInterface
+		if self.AMBISONIC:
+			import vizsonic #in either case, the playsound method is used
 		#constants
 		self.LEFT_FOOT_INDEX = 14#actually ankle
 		self.RIGHT_FOOT_INDEX = 18#actually ankle
@@ -61,6 +69,7 @@ class BoulderScene:
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		if (self.tracking):
+			from labtracker import *
 			self.Tracking = labTracker()
 			self.Tracking.setPosition(0,0,0)
 			self.Tracking.setEuler(180, 0, 0)
@@ -286,7 +295,7 @@ class BoulderScene:
 		self.sensor.refreshData()
 		skeletonData = self.sensor.getTrackedSkeleton(0,0)
 		if skeletonData != None:
-			self.screenText2.message(str(skeletonData[self.RIGHT_FOOT_INDEX])) #
+			#self.screenText2.message(str(skeletonData[self.RIGHT_FOOT_INDEX])) #
 			for i in range(self.NUMPOINTS): #
 				self.skeleton[i].visible(viz.ON) #
 				point = skeletonData[i] #
@@ -295,7 +304,7 @@ class BoulderScene:
 				ground.playsound("kick5.wav") #
 				self.score += 1
 				print self.score #debugging; I need to know how this stepping works
-		else:
+		else: #
 			for i in range(self.NUMPOINTS): #
 				self.skeleton[i].visible(viz.OFF) #
 
