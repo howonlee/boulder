@@ -54,6 +54,7 @@ class BoulderScene:
 		self.groundSetup()
 		self.treasureSetup()
 		self.avatarSetup()
+		self.faceSetup()
 		self.instruction1Setup()
 		viz.MainView.setEuler(180, 0, 0)
 		#init timers, callbacks
@@ -86,6 +87,7 @@ class BoulderScene:
 		self.ceiling = viz.add("ground_gray.osgb")
 		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
 		self.boulder = viz.add("boulder.dae")
+		self.creepyface = viz.add("rocky.obj")
 		#misc
 		self.avatar1 = viz.addAvatar("CC2_m009_hipoly_A3_v2.cfg")
 		self.avatarface = viz.addFace("rocky.vzf")
@@ -110,10 +112,10 @@ class BoulderScene:
 		self.groundroll.stop()
 		#creepy face eyes
 		self.eyes = []#eyes for creepy face
-		self.eye1 = viz.add('fire.osg', pos=(0, 1.7, -20))
+		self.eye1 = viz.add('fire.osg', pos=(1, 6.6, -31))
 		self.eye1.hasparticles()
 		self.eyes.append(self.eye1)
-		self.eye2 = viz.add('fire.osg', pos=(0, 2, -20))
+		self.eye2 = viz.add('fire.osg', pos=(-1, 6.6, -31))
 		self.eye2.hasparticles()
 		self.eyes.append(self.eye2)
 		#self.screenText2 = viz.addText('1', viz.SCREEN) #debug screentext
@@ -207,7 +209,11 @@ class BoulderScene:
 		
 	def faceSetup(self):
 		'''sets up creepy face which looks like statue'''
-		pass
+		self.creepyface.setPosition(0, 7, -35)
+		self.creepyface.setEuler(180, 340, 0)
+		self.creepyface.setScale(0.02, 0.02, 0.02)
+		for eye in self.eyes:
+			eye.setScale(7, 3, 7)
 		
 	def faceFlash(self):
 		'''gets the creepy face to flash with firey eyes'''
