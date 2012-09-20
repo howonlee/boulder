@@ -17,7 +17,7 @@ class BoulderScene:
 		viz.go(viz.PROMPT)
 		#options
 		self.takeData = False
-		self.MULTIKINECT = True
+		self.MULTIKINECT = False
 		self.isGameOver = False
 		if self.MULTIKINECT:
 			import MultiKinectInterface
@@ -41,7 +41,9 @@ class BoulderScene:
 		self.preLoad()
 		self.groundSetup()
 		self.treasureSetup()
+		self.avatarSetup()
 		self.instruction1Setup()
+		viz.MainView.setEuler(180, 0, 0)
 		#init timers, callbacks
 		vizact.onkeydown('d', self.manager.setDebug, viz.TOGGLE)
 		vizact.onkeydown('e', self.moveBoulder)
@@ -54,13 +56,14 @@ class BoulderScene:
 			self.skeleton = []
 			vizact.onkeydown(viz.KEY_ESCAPE, self.sensor.shutdownKinect)
 			for i in range(self.NUMPOINTS):
-				sphere = vizshape.addSphere(radius = 0.1, color = col)
+				sphere = vizshape.addSphere(radius = 0.1, color = viz.BLUE)
 				self.skeleton.append(sphere)
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		if (self.tracking):
 			self.Tracking = labTracker()
 			self.Tracking.setPosition(0,0,0)
+			self.Tracking.setEuler(180, 0, 0)
 
 	def preLoad(self):
 		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
@@ -70,22 +73,33 @@ class BoulderScene:
 		#objects
 		self.sky = viz.add("sky_night.osgb")
 		self.ground = viz.add("ground_gray.osgb")
+		self.wall1 = viz.add("ground_gray.osgb")
+		self.wall2 = viz.add("ground_gray.osgb")
+		self.ceiling = viz.add("ground_gray.osgb")
 		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
 		self.boulder = viz.add("boulder.dae")
 		#misc
-		self.avatar1 = viz.addAvatar("vcc_male.cfg", pos=(0, 0, -5), euler=(180, 0, 0))
+		self.avatar1 = viz.addAvatar("CC2_m009_hipoly_A3_v2.cfg")
 		self.avatarface = viz.addFace("rocky.vzf")
-		self.screenText = viz.addText('0', viz.SCREEN) #debug screentext
-		self.screenText2 = viz.addText('1', viz.SCREEN)
-		self.screenText2.setPosition(0, 0.8, 0)
+		self.screenText = viz.addText('0', viz.SCREEN)
+		self.eyes = []#eyes for creepy face
+		self.eye1 = viz.add('fire.osg', pos=(0, 1.7, -20))
+		self.eye1.hasparticles()
+		self.eyes.append(self.eye1)
+		self.eye2 = viz.add('fire.osg', pos=(0, 2, -20))
+		self.eye2.hasparticles()
+		self.eyes.append(self.eye2)
+		#self.screenText2 = viz.addText('1', viz.SCREEN) #debug screentext
+		#self.screenText2.setPosition(0, 0.8, 0)
 		self.blood = viz.addTexture("blood.png")
 		self.bloodquad = viz.addTexQuad(viz.SCREEN)
 		self.bloodquad.texture(self.blood)
-		#no need to hide ground or treasure or screen stuff, which appear immediately
+		#no need to hide ground or treasure or avatar or screen stuff, which appear immediately
 		self.boulder.visible(show = viz.OFF)
-		self.avatar1.visible(show = viz.OFF)
 		self.bloodquad.visible(show = viz.OFF)
-		
+		self.eye1.visible(show = viz.OFF)
+		self.eye2.visible(show = viz.OFF)
+
 	def checkWin(self):
 		if (self.score > self.WIN_SCORE):
 			self.runAway()
@@ -96,9 +110,10 @@ class BoulderScene:
 		'''called when we approach the treasure. triggers all the other setups'''
 		#sfx here: blingy thing
 		self.boulderSetup()
-		self.avatarSetup()
+		self.avatarRun()
 		self.treasureCleanup()
 		self.scrollGround()
+		self.faceFlash()
 		self.instruction2Setup()
 
 	def boulderTrigger(self, e):
@@ -108,11 +123,20 @@ class BoulderScene:
 		vizact.ontimer2(3, 0, self.gameOver, msg="Squishy Squish!")
 
 	def groundSetup(self):
-		'''sets up a ground beneath main view'''
+		'''sets up a ground beneath main view and walls and ceiling'''
 		self.ground.setScale(10, 10, 10)
+		self.wall1.setPosition(-5, 0, 0)
+		self.wall1.setEuler(90, 90, 0)
+		self.wall1.setScale(10, 10, 10)
+		self.wall2.setPosition(5, 0, 0)
+		self.wall2.setEuler(270, 90, 0)
+		self.wall2.setScale(10, 10, 10)
+		self.ceiling.setPosition(0, 30, 0)
+		self.ceiling.setEuler(0, 180, 0)
+		self.ceiling.setScale(10, 10, 10)
 
 	def scrollGround(self):
-		'''this starts the infinite loop of ground scrolling. don't call this, call'''
+		'''this starts the infinite loop of ground scrolling. doesn't stop once started. only the ground scrolls, not walls or ceiling'''
 		#sfx here: low --mechanical-- rumbling, different from boulder's rumbling
 		move = vizact.moveTo([0, 0, 100], time=20)
 		self.ground.setPosition(0,0,0)
@@ -154,6 +178,18 @@ class BoulderScene:
 		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([6, 6, 6], center=[0, 0, 0]), source=self.boulder)
 		self.manager.addSensor(self.bouldersensor)
 		self.manager.onEnter(self.bouldersensor, self.boulderTrigger)
+		
+	def faceSetup(self):
+		'''sets up creepy face which looks like statue'''
+		pass
+		
+	def faceFlash(self):
+		'''gets the creepy face to flash with firey eyes'''
+		fadeIn = vizact.fadeTo(1, time=2)
+		for eye in self.eyes:
+			eye.visible(show = viz.ON)
+			eye.alpha(0)
+			eye.addAction(fadeIn)
 
 	def moveBoulder(self):
 		'''sets up boulder to run over avatar'''
@@ -163,7 +199,7 @@ class BoulderScene:
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
 		vizact.ontimer2(0.5, 0, self.avatarDeath)#the 0.5 secs is a guesstimate
-		
+
 	def runAway(self):
 		'''sets up player to run away successfully. avatar still gets squished.'''
 		#sfx here: speedy footsteps
@@ -177,12 +213,12 @@ class BoulderScene:
 		viz.MainView.addAction(move1)
 		viz.MainView.addAction(move2)
 		vizact.ontimer2(1.3, 0, self.avatarDeath)
-		vizact.ontimer2(1.5, 0, self.gameOver, msg="You won!")
+		vizact.ontimer2(1.5, 0, self.gameOver, msg="You won!\nPoor guy.")
 
 	def instruction1Setup(self):
 		'''instructions for the first part of the game, taking the treasure'''
 		#sfx here: blingy notification sfx
-		self.info1 = vizinfo.add("There's probably treasure...\nBut you have limited time.")
+		self.info1 = vizinfo.add("'No! Don't do it!'")
 		vizact.ontimer2(6, 0, self.info1.shrink)
 
 	def instruction2Setup(self):
@@ -190,21 +226,28 @@ class BoulderScene:
 		#sfx here: blingy notification sfx
 		#just in case the previous notification takes less than 6 seconds
 		self.info1.shrink()
-		self.info2 = vizinfo.add("Run from the boulder!\nBut not literally!")
+		self.info2 = vizinfo.add("'We gotta run! There's a boulder rolling at us!'\nTo run away, lift your ankles and put them back down, in place.")
 		vizact.ontimer2(10, 0, self.info2.shrink)
-
+		
 	def avatarSetup(self):
+		'''sets up the avatar to refuse at you'''
+		self.avatar1.setFace(self.avatarface)
+		self.avatar1.setPosition(-2, 0, -6)
+		self.avatar1.setEuler(60, 0, 0)
+		self.avatar1.state(193) #shaking head
+
+	def avatarRun(self):
 		'''sets up the avatar to be running eternally'''
 		#sfx here: footsteps, medium speed
-		self.avatar1.setFace(self.avatarface)
-		self.avatar1.visible(show=viz.ON)
-		self.avatar1.state(11)
+		self.avatar1.setPosition(0, 0, 0)
+		self.avatar1.setEuler(180, 0, 0)
+		self.avatar1.state(143) #running like mofo
 
 	def avatarDeath(self):
 		'''custom blended avatar animations for maximum deathiness'''
 		#sfx here: scream AND squish
-		self.avatar1.blend(8, .9)
-		self.avatar1.blend(11, .1)
+		self.avatar1.blend(1, .9) #lying down
+		self.avatar1.blend(143, .1) #running
 		neck = self.avatar1.getBone("Bip01 Neck")
 		head = self.avatar1.getBone("Bip01 Head")
 		torso = self.avatar1.getBone("Bip01 Spine1")
@@ -214,6 +257,8 @@ class BoulderScene:
 		neck.lookAt([3, 3, 3], mode=viz.AVATAR_WORLD)
 		head.lookAt([-30, 30, -30], mode=viz.AVATAR_WORLD)
 		torso.lookAt([-100, 0, 20], mode=viz.AVATAR_WORLD)
+		self.avatar1.setEuler(0, 270, 0)#gotta rotate, because there's no lying action
+		self.avatar1.setPosition(0, 0.3, 0)
 
 	def bloodSetup(self):
 		'''sets up the bloody splat to be displayed'''
@@ -230,41 +275,43 @@ class BoulderScene:
 		self.isGameOver = True
 		self.screenText.alignment(viz.ALIGN_CENTER)
 		self.screenText.setPosition(0.5, 0.5, 0)
-		self.screenText.visible(show=viz.ON)
+		self.screenText.visible(show=viz.ON) #to make sure
 		self.screenText.alpha(0)
 		self.screenText.message("Game Over! " + msg)
 		fadeIn = vizact.fadeTo(1, time=5)
 		self.screenText.addAction(fadeIn)
 
 	def checkGesture(self):
+		'''check Kinect gesture to make sure you're running'''
 		self.sensor.refreshData()
 		skeletonData = self.sensor.getTrackedSkeleton(0,0)
 		if skeletonData != None:
-			self.screenText2.message(str(skeletonData[self.RIGHT_FOOT_INDEX]))
-			for i in range(self.NUMPOINTS):
-				self.skeleton[i].visible(viz.ON)
-				point = skeletonData[i]
-				self.skeleton[i].setPosition(point)
+			self.screenText2.message(str(skeletonData[self.RIGHT_FOOT_INDEX])) #
+			for i in range(self.NUMPOINTS): #
+				self.skeleton[i].visible(viz.ON) #
+				point = skeletonData[i] #
+				self.skeleton[i].setPosition(point) #
 			if ((skeletonData[self.RIGHT_FOOT_INDEX][1] > -0.6) or (skeletonData[self.LEFT_FOOT_INDEX][1] > -0.6)):
-				ground.playsound("kick5.wav")
+				ground.playsound("kick5.wav") #
 				self.score += 1
 				print self.score #debugging; I need to know how this stepping works
 		else:
-			for i in range(self.NUMPOINTS):
-				self.skeleton[i].visible(viz.OFF)
+			for i in range(self.NUMPOINTS): #
+				self.skeleton[i].visible(viz.OFF) #
 
 	def draw(self):
 		'''called every frame'''
 		if (self.isGameOver == False):
-			self.screenText.message(str(max(self.GAME_LENGTH - (viz.tick() - self.start_time), 0))) #show current time remaining
+			currTime = self.GAME_LENGTH - (viz.tick() - self.start_time)
+			self.screenText.message(str(round(max(currTime, 0), 1))) #show current time remaining
 		self.count += 1 #in other words, every 6 frames.
 		if (self.count == 6 and self.takeData):
-			self.getdata()
+			self.getData()
 			self.count = 0
 		if self.MULTIKINECT:
 			self.checkGesture()
 
-	def getdata(self):
+	def getData(self):
 		'''formats data and writes it in the file. we must offload to another thread eventually. Data file gets big really quickly.'''
 		orientation = viz.MainView.getEuler()
 		position = viz.MainView.getPosition()
