@@ -11,12 +11,14 @@ from labtracker import *
 
 '''current todos:
 insert sfx to all the sfx places
-insert music somewhere
+insert music
+add the face in, make it fairly scary
 see how the new gesture works, eventually replace with a state machine'''
 '''how ambisonic stuff works:
 		-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
 		-volume and directionality are the only settings added by vizsonic
 		-set the ambient sound (music) with vizsonic.setAmbient()'''
+		
 class BoulderScene:
 	def __init__(self):
 		'''initialize. note that takeData is the option to take orientation, position data. Data file gets really big, really quickly.'''
@@ -76,9 +78,6 @@ class BoulderScene:
 
 	def preLoad(self):
 		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
-		#sounds
-		self.footstep = viz.addAudio("footsteps.wav")
-		self.crash = viz.addAudio("crash.wav")
 		#objects
 		self.sky = viz.add("sky_night.osgb")
 		self.ground = viz.add("ground_gray.osgb")
@@ -91,6 +90,25 @@ class BoulderScene:
 		self.avatar1 = viz.addAvatar("CC2_m009_hipoly_A3_v2.cfg")
 		self.avatarface = viz.addFace("rocky.vzf")
 		self.screenText = viz.addText('0', viz.SCREEN)
+		#sounds
+		self.footstep = viz.addAudio("footsteps.wav")
+		self.footstep.stop()
+		self.footstep2 = viz.addAudio("footsteps.wav", flag=viz.LOOP)
+		self.footstep2.stop()
+		self.crunch = viz.addAudio("sickening_crunch.wav")
+		self.crunch.stop()
+		self.crunch2 = self.avatar1.playsound("sickening_crunch.wav")
+		self.crunch2.stop()
+		self.scream = self.avatar1.playsound("scream_male.wav")
+		self.scream.stop()
+		self.gong = viz.addAudio("gong.wav")
+		self.gong.stop()
+		self.whoosh = viz.addAudio("eyewhoosh.wav")
+		self.whoosh.stop()
+		self.groundroll = viz.addAudio("groundroll.wav")
+		self.groundroll.loop()
+		self.groundroll.stop()
+		#creepy face eyes
 		self.eyes = []#eyes for creepy face
 		self.eye1 = viz.add('fire.osg', pos=(0, 1.7, -20))
 		self.eye1.hasparticles()
@@ -117,7 +135,7 @@ class BoulderScene:
 
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
-		#sfx here: blingy thing
+		self.gong.play() #sfx: gong
 		self.boulderSetup()
 		self.avatarRun()
 		self.treasureCleanup()
@@ -127,7 +145,7 @@ class BoulderScene:
 
 	def boulderTrigger(self, e):
 		'''called when we hit the boulder, to indicate that we have been squished'''
-		#sfx here: squish
+		self.crunch.play() #sfx: sickening crunch. note we don't use 3d
 		self.bloodSetup()
 		vizact.ontimer2(3, 0, self.gameOver, msg="Squishy Squish!")
 
@@ -146,7 +164,7 @@ class BoulderScene:
 
 	def scrollGround(self):
 		'''this starts the infinite loop of ground scrolling. doesn't stop once started. only the ground scrolls, not walls or ceiling'''
-		#sfx here: low --mechanical-- rumbling, different from boulder's rumbling
+		self.groundroll.play() #sfx: mechanical-ish rumbling
 		move = vizact.moveTo([0, 0, 100], time=20)
 		self.ground.setPosition(0,0,0)
 		scroll = vizact.call(self.scrollGround)
@@ -176,7 +194,6 @@ class BoulderScene:
 
 	def boulderSetup(self):
 		'''sets up a boulder to roll eternally'''
-		#sfx here: rolling boulder
 		self.boulder.visible(show = viz.ON)
 		self.boulder.specular(0,0,0)
 		self.boulder.color(0.3, 0.3, 0.3)
@@ -194,6 +211,7 @@ class BoulderScene:
 		
 	def faceFlash(self):
 		'''gets the creepy face to flash with firey eyes'''
+		self.whoosh.play() #sfx: whoosh
 		fadeIn = vizact.fadeTo(1, time=2)
 		for eye in self.eyes:
 			eye.visible(show = viz.ON)
@@ -211,7 +229,7 @@ class BoulderScene:
 
 	def runAway(self):
 		'''sets up player to run away successfully. avatar still gets squished.'''
-		#sfx here: speedy footsteps
+		self.footstep2.play() #speedy footsteps
 		move1 = vizact.moveTo([0, 1.7, -15], time=2)
 		move2 = vizact.moveTo([0, 1.7, -100], time=15)
 		spin = vizact.spin(1, 0, 0, 300)
@@ -226,13 +244,11 @@ class BoulderScene:
 
 	def instruction1Setup(self):
 		'''instructions for the first part of the game, taking the treasure'''
-		#sfx here: blingy notification sfx
 		self.info1 = vizinfo.add("'No! Don't do it!'")
 		vizact.ontimer2(6, 0, self.info1.shrink)
 
 	def instruction2Setup(self):
 		'''instructions for the second part of the game, the running'''
-		#sfx here: blingy notification sfx
 		#just in case the previous notification takes less than 6 seconds
 		self.info1.shrink()
 		self.info2 = vizinfo.add("'We gotta run! There's a boulder rolling at us!'\nTo run away, lift your ankles and put them back down, in place.")
@@ -247,14 +263,14 @@ class BoulderScene:
 
 	def avatarRun(self):
 		'''sets up the avatar to be running eternally'''
-		#sfx here: footsteps, medium speed
 		self.avatar1.setPosition(0, 0, 0)
 		self.avatar1.setEuler(180, 0, 0)
 		self.avatar1.state(143) #running like mofo
 
 	def avatarDeath(self):
 		'''custom blended avatar animations for maximum deathiness'''
-		#sfx here: scream AND squish
+		self.scream.play()#sfx: scream
+		self.crunch2.play()#sfx: crunch
 		self.avatar1.blend(1, .9) #lying down
 		self.avatar1.blend(143, .1) #running
 		neck = self.avatar1.getBone("Bip01 Neck")
@@ -301,7 +317,7 @@ class BoulderScene:
 				point = skeletonData[i] #
 				self.skeleton[i].setPosition(point) #
 			if ((skeletonData[self.RIGHT_FOOT_INDEX][1] > -0.6) or (skeletonData[self.LEFT_FOOT_INDEX][1] > -0.6)):
-				ground.playsound("kick5.wav") #
+				ground.playsound("kick5.wav") # play a footstep instead, so we get feedback
 				self.score += 1
 				print self.score #debugging; I need to know how this stepping works
 		else: #
