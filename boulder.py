@@ -33,7 +33,7 @@ class BoulderScene:
 		if self.MULTIKINECT:
 			import MultiKinectInterface
 		if self.AMBISONIC:
-			import vizsonic #in either case, the playsound method is used
+			import vizsonic # playsound not used
 		#constants
 		self.LEFT_FOOT_INDEX = 14#actually ankle
 		self.RIGHT_FOOT_INDEX = 18#actually ankle
@@ -109,10 +109,18 @@ class BoulderScene:
 		self.footstep2.stop()
 		self.crunch = viz.addAudio("bonesnap.wav")
 		self.crunch.stop()
-		self.crunch2 = self.avatar1.playsound("bonesnap.wav")
-		self.crunch2.stop()
-		self.scream = self.avatar1.playsound("scream_male.wav")
-		self.scream.stop()
+		if self.AMBISONIC:
+			self.crunch2 = self.avatar1.playsound("bonesnap.wav")
+			self.crunch2.stop()
+		else:
+			self.crunch2 = viz.addAudio("bonesnap.wav")
+			self.crunch2.stop()
+		if self.AMBISONIC:
+			self.scream = self.avatar1.playsound("scream_male.wav")
+			self.scream.stop()
+		else:
+			self.scream = viz.addAudio("scream_male.wav")
+			self.scream.stop()
 		self.gong = viz.addAudio("gong.wav")
 		self.gong.stop()
 		self.whoosh = viz.addAudio("whoosh.wav")
@@ -239,7 +247,7 @@ class BoulderScene:
 		spinmove = vizact.parallel(spin, move)
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
-		vizact.ontimer2(0.5, 0, self.avatarDeath)#the 0.5 secs is a guesstimate
+		vizact.ontimer2(0.2, 0, self.avatarDeath)#the 0.2 secs is a guesstimate
 
 	def runAway(self):
 		'''sets up player to run away successfully. avatar still gets squished.'''
