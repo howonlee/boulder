@@ -18,7 +18,7 @@ add ambisonic rumble cues (dunno how)'''
 		-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
 		-volume and directionality are the only settings added by vizsonic
 		-set the ambient sound (music) with vizsonic.setAmbient()'''
-		
+
 class BoulderScene:
 	def __init__(self):
 		'''initialize. note that takeData is the option to take orientation, position data. Data file gets really big, really quickly.'''
@@ -221,7 +221,7 @@ class BoulderScene:
 		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([7, 7, 7], center=[0, 0, 0]), source=self.boulder)
 		self.manager.addSensor(self.bouldersensor)
 		self.manager.onEnter(self.bouldersensor, self.boulderTrigger)
-		
+
 	def faceSetup(self):
 		'''sets up creepy face which looks like statue'''
 		self.creepyface.setPosition(0, 7, -35)
@@ -229,7 +229,7 @@ class BoulderScene:
 		self.creepyface.setScale(0.02, 0.02, 0.02)
 		for eye in self.eyes:
 			eye.setScale(7, 3, 7)
-		
+
 	def faceFlash(self):
 		'''gets the creepy face to flash with firey eyes'''
 		self.whoosh.play() #sfx: whoosh
@@ -265,7 +265,7 @@ class BoulderScene:
 
 	def instruction1Setup(self):
 		'''instructions for the first part of the game, taking the treasure'''
-		self.info1 = vizinfo.add("'No! Don't do it!'")
+		self.info1 = vizinfo.add("'No! Don't do it!'\nBut that twinkling sure is twinkly...")
 		vizact.ontimer2(6, 0, self.info1.shrink)
 
 	def instruction2Setup(self):
@@ -276,7 +276,7 @@ class BoulderScene:
 								 + str(self.WIN_SCORE) +
 								 " steps!'\nTo run away, lift your ankles and put them back down, in place.")
 		vizact.ontimer2(10, 0, self.info2.shrink)
-		
+
 	def avatarSetup(self):
 		'''sets up the avatar to refuse at you'''
 		self.avatar1.setFace(self.avatarface)
