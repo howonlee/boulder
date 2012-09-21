@@ -18,6 +18,11 @@ add ambisonic rumble cues (dunno how)'''
 		-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
 		-volume and directionality are the only settings added by vizsonic
 		-set the ambient sound (music) with vizsonic.setAmbient()'''
+		
+'''todo:
+	make sound worky worky
+	get rid of positional problems
+	test if the kinect actually works'''
 
 class BoulderScene:
 	def __init__(self):
@@ -25,8 +30,8 @@ class BoulderScene:
 		viz.go(viz.PROMPT)
 		#options
 		self.takeData = False
-		self.MULTIKINECT = False
-		self.AMBISONIC = False
+		self.MULTIKINECT = True
+		self.AMBISONIC = True
 		self.REARVIEW = True
 		self.isGameOver = False
 		if self.MULTIKINECT:
@@ -69,6 +74,7 @@ class BoulderScene:
 		#init timers, callbacks
 		vizact.onkeydown('d', self.manager.setDebug, viz.TOGGLE)
 		vizact.onkeydown('e', self.moveBoulder)
+		vizact.onkeydown('h', self.treasureTrigger, None)
 		vizact.onkeydown('f', self.runAway)
 		vizact.onupdate(0, self.draw)
 		vizact.ontimer2(self.GAME_LENGTH, 0, self.checkWin) #timing doesn't seem to be that awfully accurate
@@ -82,7 +88,7 @@ class BoulderScene:
 		self.tracking = viz.get(viz.TRACKER)
 		if (self.tracking):
 			self.Tracking = labTracker()
-			self.Tracking.setPosition(0,0,0)
+			self.Tracking.setPosition([0,0,0])
 
 	def preLoad(self):
 		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
@@ -97,7 +103,7 @@ class BoulderScene:
 			self.treasure_sound = self.treasure.playsound("treasure.wav")
 		else:
 			self.treasure_sound = viz.addAudio("treasure.wav")
-		self.treasure_sound.loop()
+			self.treasure_sound.loop()
 		self.treasure_sound.stop()
 		self.boulder = viz.add("boulder.dae")
 		self.creepyface = viz.add("rocky.obj")
@@ -108,17 +114,12 @@ class BoulderScene:
 		self.screenText2 = viz.addText('1', viz.SCREEN)
 		self.screenText2.setPosition(0.90, 0, 0)
 		#sounds
-		self.footstep = viz.addAudio("footsteps.wav")
-		self.footstep.stop()
-		self.footstep2 = viz.addAudio("footsteps.wav", flag=viz.LOOP)
-		self.footstep2.stop()
-		self.crunch = viz.addAudio("bonesnap.wav")
-		self.crunch.stop()
+		self.crunch = None
 		if self.AMBISONIC:
-			self.crunch2 = self.avatar1.playsound("bonesnap.wav")
+			self.crunch = self.avatar1.playsound("bonesnap.wav")
 		else:
-			self.crunch2 = viz.addAudio("bonesnap.wav")
-		self.crunch2.stop()
+			self.crunch = viz.addAudio("bonesnap.wav")
+			self.crunch.stop()
 		if self.AMBISONIC:
 			self.scream = self.avatar1.playsound("scream_male.wav")
 		else:
@@ -129,7 +130,7 @@ class BoulderScene:
 		self.whoosh = viz.addAudio("whoosh.wav")
 		self.whoosh.stop()
 		self.groundroll = viz.addAudio("groundroll_loop.wav")
-		self.groundroll.loop()
+		#self.groundroll.loop()
 		self.groundroll.stop()
 		#creepy face eyes
 		self.eyes = []#eyes for creepy face
@@ -147,8 +148,9 @@ class BoulderScene:
 		self.bloodquad.visible(show = viz.OFF)
 		self.eye1.visible(show = viz.OFF)
 		self.eye2.visible(show = viz.OFF)
-		self.theme = viz.addAudio("theme.wav")
-		self.theme.stop()
+		if (not self.AMBISONIC):
+			self.theme = viz.addAudio("theme.wav")
+			self.theme.stop()
 
 	def checkWin(self):
 		if (self.score > self.WIN_SCORE):
@@ -165,7 +167,10 @@ class BoulderScene:
 		self.scrollGround()
 		self.faceFlash()
 		self.instruction2Setup()
-		vizact.ontimer2(2, 0, self.theme.play)
+		if (not self.AMBISONIC):
+			vizact.ontimer2(2, 0, self.theme.play)
+		else:
+			vizact.ontimer2(2, 0, vizsonic.setAmbient, "theme.wav", 0.5)
 
 	def boulderTrigger(self, e):
 		'''called when we hit the boulder, to indicate that we have been squished'''
@@ -198,7 +203,7 @@ class BoulderScene:
 	def treasureSetup(self):
 		'''make the treasure appear and setup the proximity stuff'''
 		#setup treasure
-		self.treasure.setPosition([0, 0, -15])
+		self.treasure.setPosition([0, 0, -3])
 		self.treasure.setScale(10, 10, 10)
 		self.treasure.emissive(1,1,1)
 		#setup anim
@@ -208,12 +213,13 @@ class BoulderScene:
 		treasureAnim = vizact.parallel(treasureUpDown, treasureSpin)
 		self.treasure.addAction(treasureAnim)
 		#setup sensor
-		self.treasuresensor = vizproximity.Sensor(vizproximity.Box([1, 5, 1], center=[0, 0, 0]), source=self.treasure)
+		self.treasuresensor = vizproximity.Sensor(vizproximity.Box([0.4, 5, 0.4], center=[0, 0, 0]), source=self.treasure)
 		self.manager.addSensor(self.treasuresensor)
-		self.treasure_sound.play()
+		self.treasure_sound.play(True)
 		self.manager.onEnter(self.treasuresensor, self.treasureTrigger)
 
 	def treasureCleanup(self):
+		self.treasure_sound.stop()
 		self.treasure_sound.stop()
 		self.treasure.visible(show = viz.OFF)
 		self.manager.removeSensor(self.treasuresensor) #this to prevent re-bouldering, which is a tragedy
@@ -256,7 +262,8 @@ class BoulderScene:
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
 		vizact.ontimer2(0.2, 0, self.avatarDeath)#the 0.2 secs is a guesstimate
-		self.theme.stop()
+		if (not self.AMBISONIC):
+			self.theme.stop()
 
 	def runAway(self):
 		'''sets up player to run away successfully. avatar still gets squished.'''
@@ -303,7 +310,7 @@ class BoulderScene:
 	def avatarDeath(self):
 		'''custom blended avatar animations for maximum deathiness'''
 		self.scream.play()#sfx: scream
-		self.crunch2.play()#sfx: crunch
+		self.crunch.play()#sfx: crunch
 		self.avatar1.blend(1, .9) #lying down
 		self.avatar1.blend(143, .1) #running
 		neck = self.avatar1.getBone("Bip01 Neck")
@@ -345,6 +352,7 @@ class BoulderScene:
 		self.sensor.refreshData()
 		skeletonData = self.sensor.getTrackedSkeleton(0,0)
 		if skeletonData != None:
+			#print ((skeletonData[self.RIGHT_FOOT_INDEX][1]))
 			if ((skeletonData[self.RIGHT_FOOT_INDEX][1] > -0.6) and (not self.rightFootUp)):
 				self.rightFootUp = True
 			elif ((skeletonData[self.RIGHT_FOOT_INDEX][1] < -0.6) and (self.rightFootUp)):
@@ -367,8 +375,9 @@ class BoulderScene:
 		if (self.count == 6 and self.takeData):
 			self.getData()
 			self.count = 0
-		if (self.count == 2 and self.MULTIKINECT): #kinect is 30fps
+		if (self.MULTIKINECT): #kinect is 30fps
 			self.checkGesture()
+
 
 	def getData(self):
 		'''formats data and writes it in the file. we must offload to another thread eventually. Data file gets big really quickly.'''
