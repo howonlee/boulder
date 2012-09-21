@@ -148,6 +148,8 @@ class BoulderScene:
 		self.bloodquad.visible(show = viz.OFF)
 		self.eye1.visible(show = viz.OFF)
 		self.eye2.visible(show = viz.OFF)
+		self.theme = viz.addAudio("theme.wav")
+		self.theme.stop()
 
 	def checkWin(self):
 		if (self.score > self.WIN_SCORE):
@@ -164,6 +166,7 @@ class BoulderScene:
 		self.scrollGround()
 		self.faceFlash()
 		self.instruction2Setup()
+		self.theme.play()
 
 	def boulderTrigger(self, e):
 		'''called when we hit the boulder, to indicate that we have been squished'''
@@ -254,6 +257,7 @@ class BoulderScene:
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
 		vizact.ontimer2(0.2, 0, self.avatarDeath)#the 0.2 secs is a guesstimate
+		self.theme.stop()
 
 	def runAway(self):
 		'''sets up player to run away successfully. avatar still gets squished.'''
