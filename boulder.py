@@ -5,16 +5,15 @@ import viztask
 import vizinput
 import vizinfo
 import vizshape
+import cProfile
 from labtracker import *
 
 '''boulder.py, by howon and david
 	a game which consists of running from a boulder'''
 
 '''current todos:
-insert sfx to all the sfx places
-insert music
-add the face in, make it fairly scary
-see how the new gesture works, eventually replace with a state machine'''
+optimize
+add ambisonic rumble cues (dunno how)'''
 '''how ambisonic stuff works:
 		-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
 		-volume and directionality are the only settings added by vizsonic
@@ -362,4 +361,4 @@ class BoulderScene:
 		self.boulder_data.flush()
 
 if __name__ == "__main__":
-	scene = BoulderScene()
+	scene = cProfile.run('BoulderScene()', filename="boulderprofile.txt")
