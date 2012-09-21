@@ -165,7 +165,7 @@ class BoulderScene:
 		self.scrollGround()
 		self.faceFlash()
 		self.instruction2Setup()
-		self.theme.play()
+		vizact.ontimer2(2, 0, self.theme.play)
 
 	def boulderTrigger(self, e):
 		'''called when we hit the boulder, to indicate that we have been squished'''
@@ -241,7 +241,7 @@ class BoulderScene:
 
 	def faceFlash(self):
 		'''gets the creepy face to flash with firey eyes'''
-		self.whoosh.play() #sfx: whoosh
+		vizact.ontimer2(0.5, 0, self.whoosh.play) #sfx: whoosh
 		fadeIn = vizact.fadeTo(1, time=2)
 		for eye in self.eyes:
 			eye.visible(show = viz.ON)
