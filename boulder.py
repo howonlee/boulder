@@ -94,6 +94,12 @@ class BoulderScene:
 		self.wall2 = viz.add("ground_gray.osgb")
 		self.ceiling = viz.add("ground_gray.osgb")
 		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
+		if self.AMBISONIC:
+			self.treasure_sound = self.treasure.playsound("treasure.wav")
+		else:
+			self.treasure_sound = viz.addAudio("treasure.wav")
+		self.treasure_sound.loop()
+		self.treasure_sound.stop()
 		self.boulder = viz.add("boulder.dae")
 		self.creepyface = viz.add("rocky.obj")
 		#misc
@@ -111,16 +117,14 @@ class BoulderScene:
 		self.crunch.stop()
 		if self.AMBISONIC:
 			self.crunch2 = self.avatar1.playsound("bonesnap.wav")
-			self.crunch2.stop()
 		else:
 			self.crunch2 = viz.addAudio("bonesnap.wav")
-			self.crunch2.stop()
+		self.crunch2.stop()
 		if self.AMBISONIC:
 			self.scream = self.avatar1.playsound("scream_male.wav")
-			self.scream.stop()
 		else:
 			self.scream = viz.addAudio("scream_male.wav")
-			self.scream.stop()
+		self.scream.stop()
 		self.gong = viz.addAudio("gong.wav")
 		self.gong.stop()
 		self.whoosh = viz.addAudio("whoosh.wav")
@@ -204,9 +208,11 @@ class BoulderScene:
 		#setup sensor
 		self.treasuresensor = vizproximity.Sensor(vizproximity.Box([1, 5, 1], center=[0, 0, 0]), source=self.treasure)
 		self.manager.addSensor(self.treasuresensor)
+		self.treasure_sound.play()
 		self.manager.onEnter(self.treasuresensor, self.treasureTrigger)
 
 	def treasureCleanup(self):
+		self.treasure_sound.stop()
 		self.treasure.visible(show = viz.OFF)
 		self.manager.removeSensor(self.treasuresensor) #this to prevent re-bouldering, which is a tragedy
 
