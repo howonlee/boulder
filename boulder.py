@@ -32,7 +32,7 @@ class BoulderScene:
 		if self.MULTIKINECT:
 			import MultiKinectInterface
 		if self.AMBISONIC:
-			import vizsonic #in either case, the playsound method is used
+			import vizsonic # playsound not used
 		#constants
 		self.LEFT_FOOT_INDEX = 14#actually ankle
 		self.RIGHT_FOOT_INDEX = 18#actually ankle
@@ -106,12 +106,20 @@ class BoulderScene:
 		self.footstep.stop()
 		self.footstep2 = viz.addAudio("footsteps.wav", flag=viz.LOOP)
 		self.footstep2.stop()
-		self.crunch = viz.addAudio("sickening_crunch.wav")
+		self.crunch = viz.addAudio("bonesnap.wav")
 		self.crunch.stop()
-		self.crunch2 = self.avatar1.playsound("sickening_crunch.wav")
-		self.crunch2.stop()
-		self.scream = self.avatar1.playsound("scream_male.wav")
-		self.scream.stop()
+		if self.AMBISONIC:
+			self.crunch2 = self.avatar1.playsound("bonesnap.wav")
+			self.crunch2.stop()
+		else:
+			self.crunch2 = viz.addAudio("bonesnap.wav")
+			self.crunch2.stop()
+		if self.AMBISONIC:
+			self.scream = self.avatar1.playsound("scream_male.wav")
+			self.scream.stop()
+		else:
+			self.scream = viz.addAudio("scream_male.wav")
+			self.scream.stop()
 		self.gong = viz.addAudio("gong.wav")
 		self.gong.stop()
 		self.whoosh = viz.addAudio("whoosh.wav")
@@ -210,7 +218,7 @@ class BoulderScene:
 		spin = vizact.spin(1, 0, 0, 300)
 		self.boulder.addAction(spin)
 		#setup sensor
-		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([6, 6, 6], center=[0, 0, 0]), source=self.boulder)
+		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([7, 7, 7], center=[0, 0, 0]), source=self.boulder)
 		self.manager.addSensor(self.bouldersensor)
 		self.manager.onEnter(self.bouldersensor, self.boulderTrigger)
 		
@@ -238,7 +246,7 @@ class BoulderScene:
 		spinmove = vizact.parallel(spin, move)
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
-		vizact.ontimer2(0.5, 0, self.avatarDeath)#the 0.5 secs is a guesstimate
+		vizact.ontimer2(0.2, 0, self.avatarDeath)#the 0.2 secs is a guesstimate
 
 	def runAway(self):
 		'''sets up player to run away successfully. avatar still gets squished.'''
