@@ -38,7 +38,7 @@ class BoulderScene:
 		self.LEFT_FOOT_INDEX = 14#actually ankle
 		self.RIGHT_FOOT_INDEX = 18#actually ankle
 		self.NUMPOINTS = 20
-		self.WIN_SCORE = 5000
+		self.WIN_SCORE = 50
 		self.GAME_LENGTH = 100
 		#init for data
 		self.start_time = viz.tick()
@@ -77,6 +77,8 @@ class BoulderScene:
 		if self.MULTIKINECT:
 			self.sensor = MultiKinectInterface.MultiKinectSensor()
 			vizact.onkeydown(viz.KEY_ESCAPE, self.sensor.shutdownKinect)
+			self.rightFootUp = False
+			self.leftFootUp = False
 		#hmd init
 		self.tracking = viz.get(viz.TRACKER)
 		if (self.tracking):
@@ -98,6 +100,8 @@ class BoulderScene:
 		self.avatar1 = viz.addAvatar("CC2_m009_hipoly_A3_v2.cfg")
 		self.avatarface = viz.addFace("rocky.vzf")
 		self.screenText = viz.addText('0', viz.SCREEN)
+		self.screenText2 = viz.addText('1', viz.SCREEN)
+		self.screenText2.setPosition(0.90, 0, 0)
 		#sounds
 		self.footstep = viz.addAudio("footsteps.wav")
 		self.footstep.stop()
@@ -124,8 +128,6 @@ class BoulderScene:
 		self.eye2 = viz.add('fire.osg', pos=(-1, 6.6, -31))
 		self.eye2.hasparticles()
 		self.eyes.append(self.eye2)
-		#self.screenText2 = viz.addText('1', viz.SCREEN) #debug screentext
-		#self.screenText2.setPosition(0, 0.8, 0)
 		self.blood = viz.addTexture("blood.png")
 		self.bloodquad = viz.addTexQuad(viz.SCREEN)
 		self.bloodquad.texture(self.blood)
@@ -263,7 +265,9 @@ class BoulderScene:
 		'''instructions for the second part of the game, the running'''
 		#just in case the previous notification takes less than 6 seconds
 		self.info1.shrink()
-		self.info2 = vizinfo.add("'We gotta run! There's a boulder rolling at us!'\nTo run away, lift your ankles and put them back down, in place.")
+		self.info2 = vizinfo.add("'We gotta run! There's a boulder rolling at us! Gotta run "
+								 + str(self.WIN_SCORE) +
+								 " steps!'\nTo run away, lift your ankles and put them back down, in place.")
 		vizact.ontimer2(10, 0, self.info2.shrink)
 		
 	def avatarSetup(self):
@@ -315,6 +319,7 @@ class BoulderScene:
 		self.screenText.visible(show=viz.ON) #to make sure
 		self.screenText.alpha(0)
 		self.screenText.message("Game Over! " + msg)
+		self.screenText2.message("") #empty it out
 		fadeIn = vizact.fadeTo(1, time=5)
 		self.screenText.addAction(fadeIn)
 
@@ -323,21 +328,29 @@ class BoulderScene:
 		self.sensor.refreshData()
 		skeletonData = self.sensor.getTrackedSkeleton(0,0)
 		if skeletonData != None:
-			if ((skeletonData[self.RIGHT_FOOT_INDEX][1] > -0.6) or (skeletonData[self.LEFT_FOOT_INDEX][1] > -0.6)):
-				self.ground.playsound("kick5.wav") # play a footstep instead, so we get feedback
+			if ((skeletonData[self.RIGHT_FOOT_INDEX][1] > -0.6) and (not self.rightFootUp)):
+				self.rightFootUp = True
+			elif ((skeletonData[self.RIGHT_FOOT_INDEX][1] < -0.6) and (self.rightFootUp)):
+				self.rightFootUp = False
 				self.score += 1
-				print self.score #debugging; I need to know how this stepping works
+			if ((skeletonData[self.LEFT_FOOT_INDEX][1] > -0.6) and (not self.leftFootUp)):
+				self.leftFootUp = True
+			elif ((skeletonData[self.LEFT_FOOT_INDEX][1] < -0.6) and (self.leftFootUp)):
+				#self.ground.playsound("kick5.wav") # play a footstep instead, so we get feedback
+				self.score += 1
+				self.leftFootUp = False
 
 	def draw(self):
 		'''called every frame'''
 		if (self.isGameOver == False):
 			currTime = self.GAME_LENGTH - (viz.tick() - self.start_time)
 			self.screenText.message(str(round(max(currTime, 0), 1))) #show current time remaining
+			self.screenText2.message(str(self.score))
 		self.count += 1 #in other words, every 6 frames.
 		if (self.count == 6 and self.takeData):
 			self.getData()
 			self.count = 0
-		if self.MULTIKINECT:
+		if (self.count == 2 and self.MULTIKINECT): #kinect is 30fps
 			self.checkGesture()
 
 	def getData(self):
