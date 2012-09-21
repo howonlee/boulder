@@ -125,7 +125,7 @@ class BoulderScene:
 		self.gong.stop()
 		self.whoosh = viz.addAudio("whoosh.wav")
 		self.whoosh.stop()
-		self.groundroll = viz.addAudio("groundroll.wav")
+		self.groundroll = viz.addAudio("groundroll_loop.wav")
 		self.groundroll.loop()
 		self.groundroll.stop()
 		#creepy face eyes
