@@ -107,9 +107,9 @@ class BoulderScene:
 		self.footstep.stop()
 		self.footstep2 = viz.addAudio("footsteps.wav", flag=viz.LOOP)
 		self.footstep2.stop()
-		self.crunch = viz.addAudio("sickening_crunch.wav")
+		self.crunch = viz.addAudio("bonesnap.wav")
 		self.crunch.stop()
-		self.crunch2 = self.avatar1.playsound("sickening_crunch.wav")
+		self.crunch2 = self.avatar1.playsound("bonesnap.wav")
 		self.crunch2.stop()
 		self.scream = self.avatar1.playsound("scream_male.wav")
 		self.scream.stop()
@@ -211,7 +211,7 @@ class BoulderScene:
 		spin = vizact.spin(1, 0, 0, 300)
 		self.boulder.addAction(spin)
 		#setup sensor
-		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([6, 6, 6], center=[0, 0, 0]), source=self.boulder)
+		self.bouldersensor = vizproximity.Sensor(vizproximity.Box([7, 7, 7], center=[0, 0, 0]), source=self.boulder)
 		self.manager.addSensor(self.bouldersensor)
 		self.manager.onEnter(self.bouldersensor, self.boulderTrigger)
 		
