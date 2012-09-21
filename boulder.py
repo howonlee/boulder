@@ -369,4 +369,4 @@ class BoulderScene:
 		self.boulder_data.flush()
 
 if __name__ == "__main__":
-	scene = cProfile.run('BoulderScene()', filename="boulderprofile.txt")
+	scene = BoulderScene()
