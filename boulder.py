@@ -1,4 +1,31 @@
-﻿AMBISONIC = True
+﻿'''
+boulder.py, by howon and david
+a game which consists of running from a boulder
+'''
+
+'''
+TODOs:
+optimize
+add ambisonic rumble cues (dunno how)
+'''
+
+'''
+NOTE: how ambisonic stuff works:
+	-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
+	-volume and directionality are the only settings added by vizsonic
+	-set the ambient sound (music) with vizsonic.setAmbient()
+'''
+		
+'''todo:
+	make sound worky worky
+	get rid of positional problems
+	test if the kinect actually works
+'''
+
+# I put the variables up here because I was trying out "from vizsonic import *",
+# which you can't use within a module. After I was done testing that,
+# they looked better up here because then all the imports are in one place.
+AMBISONIC = True
 MULTIKINECT = True
 
 import viz
@@ -10,28 +37,11 @@ import vizinfo
 import vizshape
 import cProfile
 from labtracker import *
+
 if AMBISONIC:
-	import vizsonic # playsound not used
+	import vizsonic
 if MULTIKINECT:
 	import MultiKinectInterface
-
-
-
-'''boulder.py, by howon and david
-	a game which consists of running from a boulder'''
-
-'''current todos:
-optimize
-add ambisonic rumble cues (dunno how)'''
-'''how ambisonic stuff works:
-		-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
-		-volume and directionality are the only settings added by vizsonic
-		-set the ambient sound (music) with vizsonic.setAmbient()'''
-		
-'''todo:
-	make sound worky worky
-	get rid of positional problems
-	test if the kinect actually works'''
 
 class BoulderScene:
 	def __init__(self):
@@ -136,6 +146,9 @@ class BoulderScene:
 		self.eye2.visible(show = viz.OFF)
 
 	def getSound(self, soundfile, object=None, loop=False):
+		'''a wrapper to setup the soundobject to play a sound.
+		that object should be sent back to playSound.
+		this function returns a sound object.'''
 		if AMBISONIC and object:
 			sound = object.playsound(soundfile)
 			sound.stop()
@@ -149,6 +162,7 @@ class BoulderScene:
 		return sound
 	
 	def playSound(self, soundobject, loop=False):
+		'''passed a soundobject returned from getSound. plays the actual sound.'''
 		if isinstance(soundobject, str):
 			vizsonic.setAmbient(soundobject, 0.1, 0.5) # TODO: comment
 		elif AMBISONIC and loop:
