@@ -1,4 +1,7 @@
-﻿import viz
+﻿AMBISONIC = True
+MULTIKINECT = True
+
+import viz
 import vizact
 import vizproximity
 import viztask
@@ -7,6 +10,12 @@ import vizinfo
 import vizshape
 import cProfile
 from labtracker import *
+if AMBISONIC:
+	import vizsonic # playsound not used
+if MULTIKINECT:
+	import MultiKinectInterface
+
+
 
 '''boulder.py, by howon and david
 	a game which consists of running from a boulder'''
@@ -30,14 +39,8 @@ class BoulderScene:
 		viz.go(viz.PROMPT)
 		#options
 		self.takeData = False
-		self.MULTIKINECT = False
-		self.AMBISONIC = False
 		self.REARVIEW = True
 		self.isGameOver = False
-		if self.MULTIKINECT:
-			import MultiKinectInterface
-		if self.AMBISONIC:
-			import vizsonic # playsound not used
 		#constants
 		self.LEFT_FOOT_INDEX = 14#actually ankle
 		self.RIGHT_FOOT_INDEX = 18#actually ankle
@@ -79,7 +82,7 @@ class BoulderScene:
 		vizact.onupdate(0, self.draw)
 		vizact.ontimer2(self.GAME_LENGTH, 0, self.checkWin) #timing doesn't seem to be that awfully accurate
 		#kinect init
-		if self.MULTIKINECT:
+		if MULTIKINECT:
 			self.sensor = MultiKinectInterface.MultiKinectSensor()
 			vizact.onkeydown(viz.KEY_ESCAPE, self.sensor.shutdownKinect)
 			self.rightFootUp = False
@@ -133,17 +136,22 @@ class BoulderScene:
 		self.eye2.visible(show = viz.OFF)
 
 	def getSound(self, soundfile, object=None, loop=False):
-		if self.AMBISONIC and object is not None:
+		if AMBISONIC and object:
 			sound = object.playsound(soundfile)
+			sound.stop()
+		elif AMBISONIC:
+			sound = soundfile # TODO: comment
 		else:
 			sound = viz.addAudio(soundfile)
 			if loop:
 				sound.loop()
-		sound.stop()
+			sound.stop()
 		return sound
 	
 	def playSound(self, soundobject, loop=False):
-		if self.AMBISONIC and loop:
+		if isinstance(soundobject, str):
+			vizsonic.setAmbient(soundobject, 0.1, 0.5) # TODO: comment
+		elif AMBISONIC and loop:
 			soundobject.play(True)
 		else:
 			soundobject.play()
@@ -217,7 +225,8 @@ class BoulderScene:
 		#setup sensor
 		self.treasuresensor = vizproximity.Sensor(vizproximity.Box([0.4, 5, 0.4], center=[0, 0, 0]), source=self.treasure)
 		self.manager.addSensor(self.treasuresensor)
-		self.playSound(self.treasure_sound)
+		self.playSound(self.treasure_sound, True)
+		self.playSound(self.theme) # testing
 		self.manager.onEnter(self.treasuresensor, self.treasureTrigger)
 
 	def treasureCleanup(self):
@@ -264,7 +273,7 @@ class BoulderScene:
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
 		vizact.ontimer2(0.2, 0, self.avatarDeath)#the 0.2 secs is a guesstimate
-		if (not self.AMBISONIC):
+		if (not self.AMBISONIC): ### ???
 			self.theme.stop()
 
 	def runAway(self):
@@ -377,7 +386,7 @@ class BoulderScene:
 		if (self.count == 6 and self.takeData):
 			self.getData()
 			self.count = 0
-		if (self.MULTIKINECT): #kinect is 30fps
+		if (MULTIKINECT): #kinect is 30fps
 			self.checkGesture()
 
 
