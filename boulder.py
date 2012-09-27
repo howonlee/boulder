@@ -6,7 +6,6 @@ a game which consists of running from a boulder
 '''
 TODOs:
 optimize
-add ambisonic rumble cues (dunno how)
 '''
 
 '''
@@ -17,9 +16,7 @@ NOTE: how ambisonic stuff works:
 '''
 		
 '''todo:
-	make sound worky worky
 	get rid of positional problems
-	test if the kinect actually works
 '''
 
 # I put the variables up here because I was trying out "from vizsonic import *",
@@ -124,10 +121,10 @@ class BoulderScene:
 		self.treasure_sound = self.getSound("treasure.wav", self.treasure, True)
 		self.crunch = self.getSound("bonesnap.wav", self.avatar1)
 		self.scream = self.getSound("scream_male.wav", self.avatar1)
-		self.gong = self.getSound("gong.wav")
-		self.whoosh = self.getSound("whoosh.wav")
-		self.groundroll = self.getSound("groundroll_loop.wav", loop=True)
-		self.theme = self.getSound("theme.wav", loop=True)
+		self.gong = self.getSound("gong.wav", self.treasure)
+		self.whoosh = self.getSound("whoosh.wav", self.avatarface)
+		self.groundroll = self.getSound("groundroll_loop.wav", self.ground, loop=True)
+		self.theme = self.getSound("theme.wav", self.treasure, loop=True)
 		#creepy face eyes
 		self.eyes = []#eyes for creepy face
 		self.eye1 = viz.add('fire.osg', pos=(1, 6.6, -31))
@@ -145,27 +142,22 @@ class BoulderScene:
 		self.eye1.visible(show = viz.OFF)
 		self.eye2.visible(show = viz.OFF)
 
-	def getSound(self, soundfile, object=None, loop=False):
+	def getSound(self, soundfile, object, loop=False):
 		'''a wrapper to setup the soundobject to play a sound.
-		that object should be sent back to playSound.
+		the returned object should be sent back to playSound.
 		this function returns a sound object.'''
-		if AMBISONIC and object:
+		if AMBISONIC:
 			sound = object.playsound(soundfile)
-			sound.stop()
-		elif AMBISONIC:
-			sound = soundfile # TODO: comment
 		else:
 			sound = viz.addAudio(soundfile)
 			if loop:
 				sound.loop()
-			sound.stop()
+		sound.stop()
 		return sound
 	
 	def playSound(self, soundobject, loop=False):
 		'''passed a soundobject returned from getSound. plays the actual sound.'''
-		if isinstance(soundobject, str):
-			vizsonic.setAmbient(soundobject, 0.1, 0.5) # TODO: comment
-		elif AMBISONIC and loop:
+		if AMBISONIC and loop:
 			soundobject.play(True)
 		else:
 			soundobject.play()
@@ -178,6 +170,8 @@ class BoulderScene:
 
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
+		if AMBISONIC:
+			vizsonic.setShaker(.5)
 		self.playSound(self.gong)
 		self.boulderSetup()
 		self.avatarRun()
@@ -185,16 +179,7 @@ class BoulderScene:
 		self.scrollGround()
 		self.faceFlash()
 		self.instruction2Setup()
-		# I believe attaching the sound to the viz object, i.e., viz.addAudio, has the
-		# same effect as using setAmbient with the ambisonic sound system with the benefit that
-		# you aren't limited to 1 sound at a time, but not tested.
 		vizact.ontimer2(2, 0, self.playSound, self.theme)
-		#if self.AMBISONIC
-		#	vizact.ontimer2(2, 0, viz
-		#if (not self.AMBISONIC):
-		#	vizact.ontimer2(2, 0, self.theme.play)
-		#else:
-		#	vizact.ontimer2(2, 0, vizsonic.setAmbient, "theme.wav", 0.5)
 
 	def boulderTrigger(self, e):
 		'''called when we hit the boulder, to indicate that we have been squished'''
@@ -287,8 +272,7 @@ class BoulderScene:
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
 		vizact.ontimer2(0.2, 0, self.avatarDeath)#the 0.2 secs is a guesstimate
-		if (not self.AMBISONIC): ### ???
-			self.theme.stop()
+		self.theme.stop()
 
 	def runAway(self):
 		'''sets up player to run away successfully. avatar still gets squished.'''
@@ -361,6 +345,8 @@ class BoulderScene:
 
 	def gameOver(self, msg):
 		'''shows game over message. other parts of game over are done in other functions. also stops the data.'''
+		if AMBISONIC:
+			vizsonic.setShaker(0)
 		self.takeData = False
 		self.isGameOver = True
 		self.screenText.alignment(viz.ALIGN_CENTER)
