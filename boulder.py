@@ -14,10 +14,13 @@ NOTE: how ambisonic stuff works:
 	-volume and directionality are the only settings added by vizsonic
 	-set the ambient sound (music) with vizsonic.setAmbient()
 '''
+<<<<<<< HEAD
 		
 '''todo:
 	get rid of positional problems
 '''
+=======
+>>>>>>> a4a9635e065c58df3e9391f33caa8eaccb3523cb
 
 # I put the variables up here because I was trying out "from vizsonic import *",
 # which you can't use within a module. After I was done testing that,
@@ -34,7 +37,6 @@ import vizinfo
 import vizshape
 import cProfile
 from labtracker import *
-
 if AMBISONIC:
 	import vizsonic
 if MULTIKINECT:
@@ -101,7 +103,10 @@ class BoulderScene:
 			self.Tracking.setPosition([0,0,0])
 
 	def preLoad(self):
-		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
+		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard.
+		note that when this function fucks up, your world will get emptier and quieter.
+		so if your world gets empty and quiet, assume this function fucked up
+		'''
 		#objects
 		self.sky = viz.add("sky_night.osgb")
 		self.ground = viz.add("ground_gray.osgb")
@@ -154,14 +159,14 @@ class BoulderScene:
 				sound.loop()
 		sound.stop()
 		return sound
-	
+
 	def playSound(self, soundobject, loop=False):
 		'''passed a soundobject returned from getSound. plays the actual sound.'''
 		if AMBISONIC and loop:
 			soundobject.play(True)
 		else:
 			soundobject.play()
-			
+
 	def checkWin(self):
 		if (self.score > self.WIN_SCORE):
 			self.runAway()

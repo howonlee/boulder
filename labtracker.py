@@ -29,31 +29,31 @@ class labTracker(object):
 	def __init__(self):
 		viz.mouse.setVisible(viz.OFF)
 		#Activate NVIS HMD
-		#nvis.nvisorSX111()
-		nvis.nvisorSX60()
+		nvis.nvisorSX111()
+		#nvis.nvisorSX60()
 		viz.cursor(viz.OFF)
 		#isense = viz.add('intersense.dls')
 		vrpn = viz.add('vrpn7.dle')
 		view = viz.MainView
-		
+
 		self.markers = []
-		
+
 		headMarker = vrpn.addTracker('PPT0@' + PPT_HOSTNAME, 0)
 		self.markers.append(headMarker)
 		self.markers.append( vrpn.addTracker('PPT0@' + PPT_HOSTNAME, 1) )
 		self.markers.append( vrpn.addTracker('PPT0@' + PPT_HOSTNAME, 2) )
 		self.markers.append( vrpn.addTracker('PPT0@' + PPT_HOSTNAME, 3) )
 		self.markers.append( vrpn.addTracker('PPT0@' + PPT_HOSTNAME, 4) )
-		
+
 		filter = viz.add("filter.dle")
 		headMarker_filter = filter.average(headMarker, samples = 7)
-		
+
 		headPos = viz.link(headMarker_filter, view, priority = 0)
 		headPos.setOffset(DEFAULT_OFFSET)
 		self.posLink = headPos
 		#self.posLink.postScale(DEFAULT_SCALE)
 		self.headMarker = headMarker
-	
+
 	#get position in world (absolute) coordinates of 0 marker (head marker)
 	def getPosition(self):
 		trk = self.headMarker.getPosition()
@@ -64,7 +64,7 @@ class labTracker(object):
 		trk = self.markers[markerID-1].getPosition()
 		off = self.posLink.getOffset()
 		return [trk[0]+off[0], trk[1]+off[1], trk[2]+off[2]]
-		
+
 	#set absolute location
 	def setPosition(self, pos):
 		trk = self.headMarker.getPosition()
@@ -78,6 +78,6 @@ class labTracker(object):
 		off = self.posLink.getOffset()
 		return off[1]
 	def reset(self):
-		self.posLink.setOffset(DEFAULT_OFFSET)	
-		
-	
+		self.posLink.setOffset(DEFAULT_OFFSET)
+
+
