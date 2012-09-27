@@ -14,13 +14,6 @@ NOTE: how ambisonic stuff works:
 	-volume and directionality are the only settings added by vizsonic
 	-set the ambient sound (music) with vizsonic.setAmbient()
 '''
-<<<<<<< HEAD
-		
-'''todo:
-	get rid of positional problems
-'''
-=======
->>>>>>> a4a9635e065c58df3e9391f33caa8eaccb3523cb
 
 # I put the variables up here because I was trying out "from vizsonic import *",
 # which you can't use within a module. After I was done testing that,
