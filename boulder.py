@@ -1,4 +1,28 @@
-﻿import viz
+﻿'''
+boulder.py, by howon and david
+a game which consists of running from a boulder
+'''
+
+'''
+TODOs:
+optimize
+add ambisonic rumble cues (dunno how)
+'''
+
+'''
+NOTE: how ambisonic stuff works:
+	-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
+	-volume and directionality are the only settings added by vizsonic
+	-set the ambient sound (music) with vizsonic.setAmbient()
+'''
+
+# I put the variables up here because I was trying out "from vizsonic import *",
+# which you can't use within a module. After I was done testing that,
+# they looked better up here because then all the imports are in one place.
+AMBISONIC = True
+MULTIKINECT = True
+
+import viz
 import vizact
 import vizproximity
 import viztask
@@ -7,21 +31,10 @@ import vizinfo
 import vizshape
 import cProfile
 from labtracker import *
-
-'''boulder.py, by howon and david
-	a game which consists of running from a boulder'''
-
-'''current todos:
-optimize
-add ambisonic rumble cues (dunno how)'''
-'''how ambisonic stuff works:
-		-vizsonic can only handle up to 24 sound objects. Therefore, reuse sound objects.
-		-volume and directionality are the only settings added by vizsonic
-		-set the ambient sound (music) with vizsonic.setAmbient()'''
-		
-'''todo:
-	make sound worky worky
-	get rid of positional problems'''
+if AMBISONIC:
+	import vizsonic
+if MULTIKINECT:
+	import MultiKinectInterface
 
 class BoulderScene:
 	def __init__(self):
@@ -29,14 +42,8 @@ class BoulderScene:
 		viz.go(viz.PROMPT)
 		#options
 		self.takeData = False
-		self.MULTIKINECT = True
-		self.AMBISONIC = True
 		self.REARVIEW = True
 		self.isGameOver = False
-		if self.MULTIKINECT:
-			import MultiKinectInterface
-		if self.AMBISONIC:
-			import vizsonic # playsound not used
 		#constants
 		self.LEFT_FOOT_INDEX = 14#actually ankle
 		self.RIGHT_FOOT_INDEX = 18#actually ankle
@@ -78,7 +85,7 @@ class BoulderScene:
 		vizact.onupdate(0, self.draw)
 		vizact.ontimer2(self.GAME_LENGTH, 0, self.checkWin) #timing doesn't seem to be that awfully accurate
 		#kinect init
-		if self.MULTIKINECT:
+		if MULTIKINECT:
 			self.sensor = MultiKinectInterface.MultiKinectSensor()
 			vizact.onkeydown(viz.KEY_ESCAPE, self.sensor.shutdownKinect)
 			self.rightFootUp = False
@@ -101,12 +108,6 @@ class BoulderScene:
 		self.wall2 = viz.add("ground_gray.osgb")
 		self.ceiling = viz.add("ground_gray.osgb")
 		self.treasure = viz.add("./chalice12_lowpoly_3ds/kelch12_lowpolyn2.3ds")
-		if self.AMBISONIC:
-			self.treasure_sound = self.treasure.playsound("treasure.wav")
-		else:
-			self.treasure_sound = viz.addAudio("treasure.wav")
-			self.treasure_sound.loop()
-		self.treasure_sound.stop()
 		self.boulder = viz.add("boulder.dae")
 		self.creepyface = viz.add("rocky.obj")
 		#misc
@@ -116,24 +117,13 @@ class BoulderScene:
 		self.screenText2 = viz.addText('1', viz.SCREEN)
 		self.screenText2.setPosition(0.90, 0, 0)
 		#sounds
-		self.crunch = None
-		if self.AMBISONIC:
-			self.crunch = self.avatar1.playsound("bonesnap.wav")
-		else:
-			self.crunch = viz.addAudio("bonesnap.wav")
-			self.crunch.stop()
-		if self.AMBISONIC:
-			self.scream = self.avatar1.playsound("scream_male.wav")
-		else:
-			self.scream = viz.addAudio("scream_male.wav")
-		self.scream.stop()
-		self.gong = viz.addAudio("gong.wav")
-		self.gong.stop()
-		self.whoosh = viz.addAudio("whoosh.wav")
-		self.whoosh.stop()
-		self.groundroll = viz.addAudio("groundroll_loop.wav")
-		#self.groundroll.loop()
-		self.groundroll.stop()
+		self.treasure_sound = self.getSound("treasure.wav", self.treasure, True)
+		self.crunch = self.getSound("bonesnap.wav", self.avatar1)
+		self.scream = self.getSound("scream_male.wav", self.avatar1)
+		self.gong = self.getSound("gong.wav")
+		self.whoosh = self.getSound("whoosh.wav")
+		self.groundroll = self.getSound("groundroll_loop.wav", loop=True)
+		self.theme = self.getSound("theme.wav", loop=True)
 		#creepy face eyes
 		self.eyes = []#eyes for creepy face
 		self.eye1 = viz.add('fire.osg', pos=(1, 6.6, -31))
@@ -150,9 +140,31 @@ class BoulderScene:
 		self.bloodquad.visible(show = viz.OFF)
 		self.eye1.visible(show = viz.OFF)
 		self.eye2.visible(show = viz.OFF)
-		if (not self.AMBISONIC):
-			self.theme = viz.addAudio("theme.wav")
-			self.theme.stop()
+
+	def getSound(self, soundfile, object=None, loop=False):
+		'''a wrapper to setup the soundobject to play a sound.
+		that object should be sent back to playSound.
+		this function returns a sound object.'''
+		if AMBISONIC and object:
+			sound = object.playsound(soundfile)
+			sound.stop()
+		elif AMBISONIC:
+			sound = soundfile # TODO: comment
+		else:
+			sound = viz.addAudio(soundfile)
+			if loop:
+				sound.loop()
+			sound.stop()
+		return sound
+
+	def playSound(self, soundobject, loop=False):
+		'''passed a soundobject returned from getSound. plays the actual sound.'''
+		if isinstance(soundobject, str):
+			vizsonic.setAmbient(soundobject, 0.1, 0.5) # TODO: comment
+		elif AMBISONIC and loop:
+			soundobject.play(True)
+		else:
+			soundobject.play()
 
 	def checkWin(self):
 		if (self.score > self.WIN_SCORE):
@@ -162,17 +174,23 @@ class BoulderScene:
 
 	def treasureTrigger(self, e):
 		'''called when we approach the treasure. triggers all the other setups'''
-		self.gong.play() #sfx: gong
+		self.playSound(self.gong)
 		self.boulderSetup()
 		self.avatarRun()
 		self.treasureCleanup()
 		self.scrollGround()
 		self.faceFlash()
 		self.instruction2Setup()
-		if (not self.AMBISONIC):
-			vizact.ontimer2(2, 0, self.theme.play)
-		else:
-			vizact.ontimer2(2, 0, vizsonic.setAmbient, "theme.wav", 0.5)
+		# I believe attaching the sound to the viz object, i.e., viz.addAudio, has the
+		# same effect as using setAmbient with the ambisonic sound system with the benefit that
+		# you aren't limited to 1 sound at a time, but not tested.
+		vizact.ontimer2(2, 0, self.playSound, self.theme)
+		#if self.AMBISONIC
+		#	vizact.ontimer2(2, 0, viz
+		#if (not self.AMBISONIC):
+		#	vizact.ontimer2(2, 0, self.theme.play)
+		#else:
+		#	vizact.ontimer2(2, 0, vizsonic.setAmbient, "theme.wav", 0.5)
 
 	def boulderTrigger(self, e):
 		'''called when we hit the boulder, to indicate that we have been squished'''
@@ -217,7 +235,8 @@ class BoulderScene:
 		#setup sensor
 		self.treasuresensor = vizproximity.Sensor(vizproximity.Box([0.4, 5, 0.4], center=[0, 0, 0]), source=self.treasure)
 		self.manager.addSensor(self.treasuresensor)
-		self.treasure_sound.play(True)
+		self.playSound(self.treasure_sound, True)
+		self.playSound(self.theme) # testing
 		self.manager.onEnter(self.treasuresensor, self.treasureTrigger)
 
 	def treasureCleanup(self):
@@ -264,7 +283,7 @@ class BoulderScene:
 		self.boulder.clearActions()
 		self.boulder.addAction(spinmove)
 		vizact.ontimer2(0.2, 0, self.avatarDeath)#the 0.2 secs is a guesstimate
-		if (not self.AMBISONIC):
+		if (not self.AMBISONIC): ### ???
 			self.theme.stop()
 
 	def runAway(self):
@@ -377,7 +396,7 @@ class BoulderScene:
 		if (self.count == 6 and self.takeData):
 			self.getData()
 			self.count = 0
-		if (self.MULTIKINECT): #kinect is 30fps
+		if (MULTIKINECT): #kinect is 30fps
 			self.checkGesture()
 
 
