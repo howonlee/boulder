@@ -21,8 +21,7 @@ add ambisonic rumble cues (dunno how)'''
 		
 '''todo:
 	make sound worky worky
-	get rid of positional problems
-	test if the kinect actually works'''
+	get rid of positional problems'''
 
 class BoulderScene:
 	def __init__(self):
@@ -91,7 +90,10 @@ class BoulderScene:
 			self.Tracking.setPosition([0,0,0])
 
 	def preLoad(self):
-		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard'''
+		'''preloads everything so we don't get little bit of lag. all files should be in resources folder of vizard.
+		note that when this function fucks up, your world will get emptier and quieter.
+		so if your world gets empty and quiet, assume this function fucked up
+		'''
 		#objects
 		self.sky = viz.add("sky_night.osgb")
 		self.ground = viz.add("ground_gray.osgb")
